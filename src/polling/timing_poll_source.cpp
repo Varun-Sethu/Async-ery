@@ -1,4 +1,5 @@
 #include <chrono>
+#include <mutex>
 
 #include "polling/timing_poll_source.h"
 
@@ -16,7 +17,7 @@ Async::TimingPollSource::TimingPollSource() :
 
 
 auto Async::TimingPollSource::schedule(std::chrono::milliseconds expiry, Async::job task) -> void {
-    auto lock = mutex.lock();
+    std::lock_guard<SpinLock> lock(spinlock);
     wheel.schedule(expiry, std::move(task));
 }
 
@@ -24,7 +25,7 @@ auto Async::TimingPollSource::poll_frequency() -> std::chrono::milliseconds { re
 auto Async::TimingPollSource::poll() -> std::vector<Async::job> {
     // busy wait for the lock - we busy wait as the other thread (schedule) will not maintain
     // the lock for that long so its illogical to yield our time slice
-    auto lock = mutex.lock();
+    std::lock_guard<SpinLock> lock(spinlock);
     auto expired_jobs = wheel.advance();
     return expired_jobs;
 }

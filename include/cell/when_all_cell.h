@@ -23,6 +23,12 @@ namespace Cell {
 
         private:
             struct WhenAllExecutionContext {
+                WhenAllExecutionContext(std::vector<T> resolved_values) :
+                    resolved_values(resolved_values),
+                    num_resolved_cells(0),
+                    total_cells(resolved_values.size())
+                {}
+
                 std::vector<T> resolved_values;
                 std::atomic<size_t> num_resolved_cells;
                 size_t total_cells;
@@ -47,11 +53,7 @@ Cell::WhenAllCell<T>::WhenAllCell(Async::Scheduler& scheduler, std::vector<std::
     // there is a possibility that the destructor for this cell is invoked prior to the runtime scheduling the continuations
     // for each of the cells, while such a situation is sad we need to ensure no erroneous situations arise, hence we only
     // kill metadata associated with this combinator after all cells are resolved 
-    auto execution_context = std::shared_ptr<WhenAllExecutionContext>(new WhenAllExecutionContext{
-        .resolved_values = std::vector<T>(cells.size()),
-        .num_resolved_cells = std::atomic<size_t>(0),
-        .total_cells = cells.size() 
-    });
+    auto execution_context = std::make_shared<WhenAllExecutionContext>(std::vector<T>(cells.size()));
 
     for (size_t cell_idx = 0; cell_idx < cells.size(); cell_idx += 1) {
         cells[cell_idx]->await([execution_context, cell_idx, underlying_cell=this->underlying_cell](T value) {
@@ -59,9 +61,11 @@ Cell::WhenAllCell<T>::WhenAllCell(Async::Scheduler& scheduler, std::vector<std::
             // guaranteed that each cell touches a unique part of the cells array
             auto& [resolved_values, num_resolved_tasks, total_cells] = *execution_context;
             resolved_values[cell_idx] = value;
-            num_resolved_tasks.fetch_add(1);
 
-            if (num_resolved_tasks.load() == total_cells) { underlying_cell->write(resolved_values); }
+            // if this was the last task to resolve, we can write the resolved values to the underlying cell
+            if (num_resolved_tasks.fetch_add(1, std::memory_order_relaxed) + 1 == total_cells) {
+                underlying_cell->write(resolved_values);
+            }
         });
     }
 }

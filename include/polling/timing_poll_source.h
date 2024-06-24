@@ -14,7 +14,7 @@ namespace Async {
             auto poll() -> std::vector<Async::job> override;
 
         private:
-            SpinLock mutex;
+            SpinLock spinlock;
             HierarchicalTimingWheel<Async::job> wheel;
     };
 }

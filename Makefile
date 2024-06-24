@@ -1,8 +1,10 @@
 GCC_FLAGS = -g -Wall -std=c++20 -pthread
 INCL = -I include
 
-bin/util.o: src/util/spinlock.cpp include/util/spinlock.h
-	g++-10 -c src/util/spinlock.cpp $(GCC_FLAGS) $(INCL) -o bin/util.o
+bin/util.o: include/util/spinlock.h include/util/job_queue.h src/util/spinlock.cpp src/util/job_queue.cpp
+	g++-10 -c src/util/spinlock.cpp $(GCC_FLAGS) $(INCL) -o bin/spinlock.o
+	g++-10 -c src/util/job_queue.cpp $(GCC_FLAGS) $(INCL) -o bin/job_queue.o
+	ld -r -o bin/util.o bin/spinlock.o bin/job_queue.o
 
 bin/polling.o: src/polling/timing_poll_source.cpp include/polling/timing_poll_source.h include/polling/poll_source.h
 	g++-10 -c src/polling/timing_poll_source.cpp $(GCC_FLAGS) $(INCL) -o bin/polling.o
@@ -15,5 +17,8 @@ build: bin/scheduler.o bin/util.o bin/polling.o
 
 
 stress:
-	g++-10 stress.cpp -g -Wall -I include -std=c++20 -o stress -pthread
+	g++-10 tests/stress.cpp -g -Wall -I include -std=c++20 -o stress -pthread
 
+
+queue: bin/util.o
+	g++-10 tests/queue_test.cpp bin/util.o $(GCC_FLAGS) $(INCL) -o bin/queue

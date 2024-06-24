@@ -19,3 +19,14 @@ namespace Async {
     template <typename T>
     using Result = std::variant<Resolved<T>, Status>;
 };
+
+
+namespace SchedulerTypes {
+    // Job in the context of a scheduler is distinct from
+    // the job in the context of an async fn, this is because
+    // async jobs do not return anything whereas scheduler jobs
+    // require a scheduler context for queueing continuations onto their owner worker
+    // threads
+    using Context = std::optional<int>;
+    using Job = std::function<void(Context)>;
+};
