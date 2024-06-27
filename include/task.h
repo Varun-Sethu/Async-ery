@@ -6,7 +6,7 @@
 #include <ranges>
 
 #include "types.h"
-#include "scheduler.h"
+#include "scheduler/scheduler.h"
 #include "cell/write_once_cell.h"
 #include "cell/tracking_once_cell.h"
 #include "cell/when_any_cell.h"
@@ -70,9 +70,9 @@ template <typename T>
 Async::Task<T>::Task(Async::Scheduler& scheduler, std::function<T(void)> f) : scheduler(scheduler) {
     auto cell = std::make_shared<Cell::WriteOnceCell<T>>(scheduler);
     this->cell = cell;
-    this->scheduler.queue([cell, f]() {
+    this->scheduler.queue(scheduler.empty_context(), [cell, f](auto ctx) {
         auto result = f();
-        cell->write(result);
+        cell->write(ctx, result);
     });
 }
 
@@ -97,7 +97,7 @@ template <typename T>
 template <typename G>
 auto Async::Task<T>::bind(std::function<Task<G>(T)> f) -> Task<G> {
     auto tracking_cell = std::make_shared<Cell::TrackingOnceCell<G>>();
-    this->cell->await([tracking_cell, f](T value) {
+    this->cell->await([tracking_cell, f](auto _, T value) {
         auto new_task = f(value);
         tracking_cell->track(new_task.cell);
     });
@@ -113,9 +113,9 @@ template <typename T>
 template <typename G>
 auto Async::Task<T>::map(std::function<G(T)> f) -> Task<G> {
     auto cell = std::make_shared<Cell::WriteOnceCell<G>>(scheduler);
-    this->cell->await([cell, f](T value) {
+    this->cell->await([cell, f](auto ctx, T value) {
         auto result = f(value);
-        cell->write(result);
+        cell->write(ctx, result);
     });
 
     return Task<G>(scheduler, cell);

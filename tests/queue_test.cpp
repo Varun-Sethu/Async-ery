@@ -1,12 +1,14 @@
 #include <map>
 #include <iostream>
 
-#include "util/job_queue.h"
+#include "scheduler/circular_queue.h"
+#include "scheduler/scheduler.h"
 
 auto main() -> int {
-    auto queue = JobQueue(4);
+    auto queue = CircularQueue(4);
     auto job_id = 0;
     auto job_results = std::map<int, bool>();
+    auto scheduler = Async::Scheduler(0, {});
 
     std::srand(std::time(nullptr));
 
@@ -28,16 +30,17 @@ auto main() -> int {
 
 
         // generate a random amount of jobs to run
+        if (queue.size() == 0) { continue; }
         auto num_jobs_to_run = std::rand() % queue.size();
         for (size_t j = 0; j < num_jobs_to_run; j++) {
             auto job = queue.dequeue().value();
-            job(std::nullopt);
+            job(scheduler.empty_context());
         }
     }
 
     // run all remaining jobs
     while (auto job = queue.dequeue()) {
-        if (job.has_value()) { job.value()(std::nullopt); }
+        if (job.has_value()) { job.value()(scheduler.empty_context()); }
         else { break; }
     }
 

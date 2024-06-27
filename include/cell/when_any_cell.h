@@ -6,7 +6,7 @@
 
 #include "cell.h"
 #include "write_once_cell.h"
-#include "scheduler.h"
+#include "scheduler/scheduler.h"
 
 namespace Cell {
     // WhenAnyCell assumes ownership of the cells it is tracking
@@ -17,7 +17,7 @@ namespace Cell {
             WhenAnyCell(Async::Scheduler& scheduler, std::vector<std::shared_ptr<ICell<T>>> cells);
 
             auto read() const -> std::optional<T> override;
-            auto await(std::function<void(T)> callback) -> void override;
+            auto await(Callback<T> callback) -> void override;
             auto block() -> T override;
     
         private:
@@ -38,8 +38,8 @@ Cell::WhenAnyCell<T>::WhenAnyCell(Async::Scheduler& scheduler, std::vector<std::
     // gets invoked prior to the runtime scheduling the continuation we pass to the cells... if this happens it would be sad
     // however to prevent erroneous situations we only invoke the destructor of the underlying cell once all the cells have resolved
     for (auto& cell : cells) {
-        cell->await([underlying_cell=this->underlying_cell](T value) {
-            underlying_cell->write(value);
+        cell->await([underlying_cell=this->underlying_cell](auto ctx, T value) {
+            underlying_cell->write(ctx, value);
         });
     }
 }
@@ -49,7 +49,7 @@ template <typename T>
 auto Cell::WhenAnyCell<T>::read() const -> std::optional<T> { return underlying_cell->read(); }
 
 template <typename T>
-auto Cell::WhenAnyCell<T>::await(std::function<void(T)> callback) -> void { underlying_cell->await(callback); }
+auto Cell::WhenAnyCell<T>::await(Callback<T> callback) -> void { underlying_cell->await(callback); }
 
 template <typename T>
 auto Cell::WhenAnyCell<T>::block() -> T { return underlying_cell->block(); }

@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#include "scheduler.h"
+#include "scheduler/scheduler.h"
 #include "task.h"
 #include "cell/write_once_cell.h"
 
@@ -16,7 +16,10 @@ namespace Async {
     class TaskValueSource {
         public:
             TaskValueSource(Async::Scheduler& scheduler);
+            
             auto complete(T value) -> void;
+            auto complete(Async::SchedulingContext ctx, T value) -> void;
+
             auto create() -> Async::Task<T>;
         private:
             std::shared_ptr<Cell::WriteOnceCell<T>> task_cell;
@@ -31,8 +34,12 @@ Async::TaskValueSource<T>::TaskValueSource(Async::Scheduler& scheduler) : schedu
     this->task_cell = std::make_shared<Cell::WriteOnceCell<T>>(scheduler);
 }
 
+
 template <typename T>
 auto Async::TaskValueSource<T>::complete(T value) -> void { this->task_cell->write(value); }
+
+template <typename T>
+auto Async::TaskValueSource<T>::complete(Async::SchedulingContext ctx, T value) -> void { this->task_cell->write(ctx, value); }
 
 template <typename T>
 auto Async::TaskValueSource<T>::create() -> Async::Task<T> { return Async::Task<T>(this->scheduler, this->task_cell); }

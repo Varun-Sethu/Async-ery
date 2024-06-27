@@ -7,7 +7,7 @@
 
 #include "cell.h"
 #include "write_once_cell.h"
-#include "scheduler.h"
+#include "scheduler/scheduler.h"
 
 namespace Cell {
     // WhenAllCell, like WhenAnyCell assumes ownership of the cells it is tracking
@@ -18,7 +18,7 @@ namespace Cell {
             WhenAllCell(Async::Scheduler& scheduler, std::vector<std::shared_ptr<ICell<T>>> cells);
 
             auto read() const -> std::optional<std::vector<T>> override;
-            auto await(std::function<void(std::vector<T>)> callback) -> void override;
+            auto await(Callback<std::vector<T>> callback) -> void override;
             auto block() -> std::vector<T> override;
 
         private:
@@ -56,7 +56,7 @@ Cell::WhenAllCell<T>::WhenAllCell(Async::Scheduler& scheduler, std::vector<std::
     auto execution_context = std::make_shared<WhenAllExecutionContext>(std::vector<T>(cells.size()));
 
     for (size_t cell_idx = 0; cell_idx < cells.size(); cell_idx += 1) {
-        cells[cell_idx]->await([execution_context, cell_idx, underlying_cell=this->underlying_cell](T value) {
+        cells[cell_idx]->await([execution_context, cell_idx, underlying_cell=this->underlying_cell](auto ctx, T value) {
             // Safety: we don't actually need mutual exclusion here, the cells array is already resized and we are
             // guaranteed that each cell touches a unique part of the cells array
             auto& [resolved_values, num_resolved_tasks, total_cells] = *execution_context;
@@ -64,7 +64,7 @@ Cell::WhenAllCell<T>::WhenAllCell(Async::Scheduler& scheduler, std::vector<std::
 
             // if this was the last task to resolve, we can write the resolved values to the underlying cell
             if (num_resolved_tasks.fetch_add(1, std::memory_order_relaxed) + 1 == total_cells) {
-                underlying_cell->write(resolved_values);
+                underlying_cell->write(ctx, resolved_values);
             }
         });
     }
@@ -75,7 +75,9 @@ template <typename T>
 auto Cell::WhenAllCell<T>::read() const -> std::optional<std::vector<T>> { return underlying_cell->read(); }
 
 template <typename T>
-auto Cell::WhenAllCell<T>::await(std::function<void(std::vector<T>)> callback) -> void { underlying_cell->await(callback); }
+auto Cell::WhenAllCell<T>::await(Callback<std::vector<T>> callback) -> void {
+    underlying_cell->await(callback);
+}
 
 template <typename T>
 auto Cell::WhenAllCell<T>::block() -> std::vector<T> { return underlying_cell->block(); }

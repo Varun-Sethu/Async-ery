@@ -3,23 +3,27 @@
 #include <functional>
 #include <chrono>
 
-#include "scheduler.h"
+#include "scheduler/scheduler.h"
 #include "util/timing_wheel.h"
 
 using std::chrono_literals::operator""ms, std::chrono_literals::operator""min;
 
 Async::Scheduler::Scheduler(int n_workers, std::vector<Async::Scheduler::PollSource> poll_sources) {
     auto workers = std::views::iota(0, n_workers)
-            | std::views::transform([this](auto _) { return [this](auto stop) { this->begin_worker(stop); }; })
+            | std::views::transform([this](auto id) { return [this, id](auto stop) { this->begin_worker(id, stop); }; })
             | std::views::transform([](auto worker) { return std::jthread(worker); });
 
     this->worker_threads = std::vector<std::jthread>(workers.begin(), workers.end());
     this->poll_thread = std::jthread([this, poll_sources](auto stop) { this->begin_poll(stop, poll_sources); });
 }
 
+auto Async::Scheduler::empty_context() -> Async::SchedulingContext {
+    return Async::SchedulingContext();
+}
 
-auto Async::Scheduler::queue(job job_fn) -> void { queue_batch({ job_fn }); }
-auto Async::Scheduler::queue_batch(std::vector<job> jobs) -> void {
+
+auto Async::Scheduler::queue(SchedulingContext ctx, SchedulerJob job_fn) -> void { queue_batch(ctx, { job_fn }); }
+auto Async::Scheduler::queue_batch(SchedulingContext ctx, std::vector<SchedulerJob> jobs) -> void {
     {
         auto lock = std::unique_lock<std::mutex>(this->queue_mutex);
         this->job_queue.insert(this->job_queue.end(), jobs.begin(), jobs.end());
@@ -44,7 +48,8 @@ auto Async::Scheduler::begin_poll(std::stop_token stop_token, std::vector<Async:
     // now continuously poll the poll sources, only running them when they are scheduled in the future
     while (!stop_token.stop_requested()) {
         for (auto& ready_poll : poll_scheduler.advance()) {
-            queue_batch(ready_poll->poll());
+            // TODO: allocate these jobs to a random thread :D
+            queue_batch(this->empty_context(), ready_poll->poll());
             schedule_poll_source(ready_poll->poll_frequency(), ready_poll);
         }
     }
@@ -52,7 +57,9 @@ auto Async::Scheduler::begin_poll(std::stop_token stop_token, std::vector<Async:
 
 // begin_worker is the main scheduler loop, it will keep picking off tasks from the run queue while there is
 // still work to be done
-auto Async::Scheduler::begin_worker(std::stop_token stop_token) -> void {
+auto Async::Scheduler::begin_worker(int worker_id, std::stop_token stop_token) -> void {
+    auto context_for_worker = SchedulingContext(worker_id);
+
     while (!stop_token.stop_requested()) {
         auto job = ({
             auto lock = std::unique_lock<std::mutex>(this->queue_mutex);
@@ -70,6 +77,6 @@ auto Async::Scheduler::begin_worker(std::stop_token stop_token) -> void {
 
         // we cannot run the job while holding the lock as the job may try to queue more jobs
         // which would require the lock to be re-acquired - hence a deadlock D:
-        job();
+        job(context_for_worker);
     }
 }

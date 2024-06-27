@@ -5,16 +5,16 @@
 #include <mutex>
 #include <vector>
 
-#include "spinlock.h"
-#include "types.h"
+#include "util/spinlock.h"
+#include "scheduler/types.h"
 
 
-class JobQueue {
+class CircularQueue {
     public:
-        JobQueue(int base_size) : queue(base_size) {}
+        CircularQueue(int base_size) : queue(base_size) {}
 
-        auto enqueue(SchedulerTypes::Job&& job) -> void;
-        auto dequeue() -> std::optional<SchedulerTypes::Job>;
+        auto enqueue(Async::SchedulerJob&& item) -> void;
+        auto dequeue() -> std::optional<Async::SchedulerJob>;
         auto size() -> size_t;
 
     private:
@@ -23,7 +23,7 @@ class JobQueue {
         auto resize() -> void;
 
 
-        std::vector<SchedulerTypes::Job> queue;
+        std::vector<Async::SchedulerJob> queue;
         size_t head = 0;
         size_t tail = 0;
 

@@ -3,7 +3,7 @@
 #include <memory>
 #include <functional>
 
-#include "scheduler.h"
+#include "scheduler/scheduler.h"
 #include "task_value_source.h"
 #include "task_timer_source.h"
 #include "task.h"

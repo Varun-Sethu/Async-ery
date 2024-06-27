@@ -6,7 +6,7 @@
 #include <condition_variable>
 #include <functional>
 
-#include "scheduler.h"
+#include "scheduler/scheduler.h"
 #include "cell.h"
 
 namespace Cell {
@@ -23,7 +23,7 @@ namespace Cell {
             // of the cell being tracked when it is available, if no cell 
             // is being tracked, the callback is added to a list of callbacks
             // and added once we have a tracking cell
-            auto await(std::function<void(T)> callback) -> void override;
+            auto await(Callback<T> callback) -> void override;
 
             // track sets the cell to track, if a cell is already being tracked
             // the function returns false, otherwise it returns true indicating a successful track
@@ -41,7 +41,7 @@ namespace Cell {
             // as we may not know what cell we are tracking until much later, hence we need to
             // maintain a set of subscribers to fill once we have a cell to track
             std::optional<std::shared_ptr<ICell<T>>> cell;
-            std::vector<std::function<void(T)>> callbacks;
+            std::vector<Callback<T>> callbacks;
             std::condition_variable_any cell_filled;
 
             mutable std::shared_mutex mutex;
@@ -63,7 +63,7 @@ auto Cell::TrackingOnceCell<T>::read() const -> std::optional<T> {
 
 
 template <typename T>
-auto Cell::TrackingOnceCell<T>::await(std::function<void(T)> callback) -> void {
+auto Cell::TrackingOnceCell<T>::await(Callback<T> callback) -> void {
     // note that we take a shared lock here to prevent lock contention, as 
     // track is the only other fn that would use the callbacks vector (and claims a unique lock)
     // it is impossible for both await and write to be in the critical section at the same time
@@ -85,7 +85,8 @@ auto Cell::TrackingOnceCell<T>::track(std::shared_ptr<ICell<T>> new_cell) -> boo
     
         cell = std::optional(new_cell);
     
-        // alert callbacks
+        // alert callbacks by registering them as callbacks
+        // on the underlying cell
         for (auto& callback : callbacks) {
             cell.value()->await(callback);
         }
