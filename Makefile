@@ -14,7 +14,7 @@ bin/scheduler.o: src/scheduler/scheduler.cpp include/scheduler/scheduler.h src/s
 	ld -r -o bin/scheduler.o bin/scheduler_.o bin/circular_queue.o
 
 build: bin/scheduler.o bin/util.o bin/polling.o
-	g++-10 tests/main.cpp bin/scheduler.o bin/util.o bin/polling.o $(GCC_FLAGS) $(INCL) -o bin/main
+	g++-10 -std=c++20 tests/main.cpp bin/scheduler.o bin/util.o bin/polling.o $(GCC_FLAGS) $(INCL) -o bin/main
 
 stress:
 	g++-10 tests/stress.cpp -g -Wall -I include -std=c++20 -o stress -pthread

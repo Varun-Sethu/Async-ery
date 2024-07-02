@@ -11,6 +11,7 @@
 #include "types.h"
 #include "scheduler/types.h"
 #include "polling/poll_source.h"
+#include "scheduler/circular_queue.h"
 
 namespace Async {
     // Scheduler is the underlying Async scheduler class, it is responsible for executing any tasks
@@ -24,18 +25,17 @@ namespace Async {
             Scheduler(int n_workers, std::vector<PollSource> poll_sources);
             
             auto queue(SchedulingContext ctx, SchedulerJob job_fn) -> void;
-            auto empty_context() -> SchedulingContext;
-
         private:
             auto queue_batch(SchedulingContext ctx, std::vector<SchedulerJob> jobs) -> void;
 
-            auto begin_poll(std::stop_token stop_token, std::vector<PollSource> poll_sources) -> void;            
+            auto begin_poll(std::stop_token stop_token, std::vector<PollSource> poll_sources) -> void;
+
+            auto next_worker_job(int worker_id) -> std::optional<SchedulerJob>;      
             auto begin_worker(int worker_id, std::stop_token stop_token) -> void;
 
-            std::mutex queue_mutex;
-            std::deque<SchedulerJob> job_queue = std::deque<SchedulerJob>();
-            std::condition_variable_any queue_has_data;
-
+            CircularQueue job_queue;
+            std::vector<CircularQueue> worker_queues;
+            
             std::vector<std::jthread> worker_threads;
             std::jthread poll_thread;
     };

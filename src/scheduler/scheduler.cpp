@@ -1,6 +1,7 @@
 #include <ranges>
 #include <memory>
 #include <functional>
+#include <iostream>
 #include <chrono>
 
 #include "scheduler/scheduler.h"
@@ -8,7 +9,12 @@
 
 using std::chrono_literals::operator""ms, std::chrono_literals::operator""min;
 
-Async::Scheduler::Scheduler(int n_workers, std::vector<Async::Scheduler::PollSource> poll_sources) {
+Async::Scheduler::Scheduler(int n_workers, std::vector<Async::Scheduler::PollSource> poll_sources) : job_queue(1024) {
+    auto queues = std::views::iota(0, n_workers) | std::views::transform([](auto id) { return CircularQueue(1024); });
+    this->worker_queues = std::vector<CircularQueue>(
+        std::move_iterator(queues.begin()),
+        std::move_iterator(queues.end()));
+
     auto workers = std::views::iota(0, n_workers)
             | std::views::transform([this](auto id) { return [this, id](auto stop) { this->begin_worker(id, stop); }; })
             | std::views::transform([](auto worker) { return std::jthread(worker); });
@@ -17,18 +23,14 @@ Async::Scheduler::Scheduler(int n_workers, std::vector<Async::Scheduler::PollSou
     this->poll_thread = std::jthread([this, poll_sources](auto stop) { this->begin_poll(stop, poll_sources); });
 }
 
-auto Async::Scheduler::empty_context() -> Async::SchedulingContext {
-    return Async::SchedulingContext();
-}
-
 
 auto Async::Scheduler::queue(SchedulingContext ctx, SchedulerJob job_fn) -> void { queue_batch(ctx, { job_fn }); }
 auto Async::Scheduler::queue_batch(SchedulingContext ctx, std::vector<SchedulerJob> jobs) -> void {
-    {
-        auto lock = std::unique_lock<std::mutex>(this->queue_mutex);
-        this->job_queue.insert(this->job_queue.end(), jobs.begin(), jobs.end());
+    if (ctx == SchedulingContext::empty()) {
+        for (auto& job : jobs) { job_queue.enqueue(std::move(job)); }
+    } else {
+        for (auto& job : jobs) { worker_queues[ctx.worker_id.value()].enqueue(std::move(job)); }
     }
-    this->queue_has_data.notify_one();
 }
 
 
@@ -48,11 +50,37 @@ auto Async::Scheduler::begin_poll(std::stop_token stop_token, std::vector<Async:
     // now continuously poll the poll sources, only running them when they are scheduled in the future
     while (!stop_token.stop_requested()) {
         for (auto& ready_poll : poll_scheduler.advance()) {
-            // TODO: allocate these jobs to a random thread :D
-            queue_batch(this->empty_context(), ready_poll->poll());
+            queue_batch(SchedulingContext::empty(), ready_poll->poll());
             schedule_poll_source(ready_poll->poll_frequency(), ready_poll);
         }
     }
+}
+
+// next_worker_job is a helper function that will attempt to find the next job for a worker to execute 
+// it will first check the worker's queue, then the global queue, and finally evict a job from another worker
+// queue
+auto Async::Scheduler::next_worker_job(int worker_id) -> std::optional<SchedulerJob> {
+    if (auto job = worker_queues[worker_id].dequeue(); job.has_value()) { return job; }
+
+    // check the global queue for any jobs, we do this "naively" by first testing for a job
+    // using the size (this maintains a relaxed memory order) and if one exists then acquiring it
+    auto job_from_global_queue = job_queue.size() > 0 
+                                    ? job_queue.dequeue() 
+                                    : std::nullopt;
+    
+    if (job_from_global_queue.has_value()) { return job_from_global_queue; }
+
+    // we must now evict a job from another worker queue, we do this by iterating from our 
+    // current worker id until we wrap around, we do this "approximately" skipping if we
+    // see no jobs
+    for (auto i = worker_id + 1; i != worker_id; i = (i + 1) % worker_queues.size()) {
+        if (worker_queues[i].size() == 0) { continue; }
+        if (auto job = worker_queues[i].dequeue(); job.has_value()) {
+            return job;
+        }
+    }
+
+    return std::nullopt;
 }
 
 // begin_worker is the main scheduler loop, it will keep picking off tasks from the run queue while there is
@@ -61,22 +89,11 @@ auto Async::Scheduler::begin_worker(int worker_id, std::stop_token stop_token) -
     auto context_for_worker = SchedulingContext(worker_id);
 
     while (!stop_token.stop_requested()) {
-        auto job = ({
-            auto lock = std::unique_lock<std::mutex>(this->queue_mutex);
-            if (job_queue.empty()) { 
-                // the condition variable may have been triggered by a stop token, in which case 
-                // job_available will be false and we should terminate
-                auto job_available = queue_has_data.wait(lock, stop_token, [&]() { return !job_queue.empty(); }); 
-                if (!job_available) { break; }
-            }
+        auto job = next_worker_job(worker_id);
 
-            auto job = job_queue.front();
-            job_queue.pop_front();
-            job;
-        });
-
-        // we cannot run the job while holding the lock as the job may try to queue more jobs
-        // which would require the lock to be re-acquired - hence a deadlock D:
-        job(context_for_worker);
+        if (!job.has_value()) { std::this_thread::yield(); }
+        else {
+            job.value()(context_for_worker);
+        }
     }
 }

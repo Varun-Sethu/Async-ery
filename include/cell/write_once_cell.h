@@ -26,7 +26,7 @@ namespace Cell {
             // for this fn, one method takes no scheduling context so uses an empty scheduling context
             // when dispatching continuations and the other takes a defined context, for more information
             // on scheduling contexts see the documentation under scheduler.h
-            auto write(T write_val) -> bool { return write(scheduler.empty_context(), write_val); }
+            auto write(T write_val) -> bool { return write(Async::SchedulingContext::empty(), write_val); }
             auto write(Async::SchedulingContext ctx, T write_val) -> bool;
 
             // await takes a callback function and calls it with the value
@@ -74,9 +74,7 @@ auto Cell::WriteOnceCell<T>::write(Async::SchedulingContext ctx, T write_val) ->
         // alert callbacks by scheduling continuations
         // on the scheduler
         for (auto& callback : callbacks) {
-            scheduler.queue(
-                ctx,
-                [=] (auto ctx) { callback(ctx, write_val); });
+            scheduler.queue(ctx, [=] (auto ctx) { callback(ctx, write_val); });
         }
 
         // clear the callbacks to release any reference we may indirectly maintain
@@ -98,9 +96,7 @@ auto Cell::WriteOnceCell<T>::await(Callback<T> callback) -> void {
     std::shared_lock lock(mutex);
     if (value.has_value()) {
         auto value_inner = value.value();
-        scheduler.queue(
-            scheduler.empty_context(),
-            [=] (auto ctx) { callback(ctx, value_inner); });
+        scheduler.queue(Async::SchedulingContext::empty(), [=] (auto ctx) { callback(ctx, value_inner); });
         return;
     }
 

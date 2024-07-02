@@ -7,7 +7,8 @@ auto CircularQueue::enqueue(Async::SchedulerJob&& item) -> void {
     if (is_full) { resize(); }
 
     queue[tail] = std::move(item);
-    tail = (tail + 1) % queue.size();   
+    tail = (tail + 1) % queue.size();
+    current_size.fetch_add(1, std::memory_order_relaxed);   
 }
 
 auto CircularQueue::dequeue() -> std::optional<Async::SchedulerJob> {
@@ -17,15 +18,11 @@ auto CircularQueue::dequeue() -> std::optional<Async::SchedulerJob> {
     auto job = std::optional(std::move(queue[head]));
     head = (head + 1) % queue.size();
 
+    current_size.fetch_sub(1, std::memory_order_relaxed);
     return job;
 }
 
-auto CircularQueue::size() -> size_t {
-    std::lock_guard<SpinLock> lock(spinlock);
-    return tail >= head
-                ? tail - head
-                : queue.size() - head + tail; 
-}
+auto CircularQueue::size() -> size_t { return current_size.load(std::memory_order_relaxed); }
 
 // Resize grows the queue to be a factor of two multiplier of the current size
 // NOTE: the function assumes the lock over the queue is currently held

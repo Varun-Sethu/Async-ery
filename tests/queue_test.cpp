@@ -34,13 +34,13 @@ auto main() -> int {
         auto num_jobs_to_run = std::rand() % queue.size();
         for (size_t j = 0; j < num_jobs_to_run; j++) {
             auto job = queue.dequeue().value();
-            job(scheduler.empty_context());
+            job(Async::SchedulingContext::empty());
         }
     }
 
     // run all remaining jobs
     while (auto job = queue.dequeue()) {
-        if (job.has_value()) { job.value()(scheduler.empty_context()); }
+        if (job.has_value()) { job.value()(Async::SchedulingContext::empty()); }
         else { break; }
     }
 
