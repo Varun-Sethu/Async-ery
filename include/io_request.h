@@ -14,11 +14,7 @@ namespace Async {
             auto offset() -> off_t { return file_offset; }
             auto underlying_buffer() -> std::shared_ptr<volatile char[]>& { return buffer; }
 
-            auto copy_buffer() -> std::shared_ptr<char[]> {
-                auto copy = std::shared_ptr<char[]>(new char[nbytes]);
-                std::copy_n(buffer.get(), nbytes, copy.get());
-                return copy;
-            }
+            auto copy_buffer() -> std::shared_ptr<char[]>;
 
         private:
             std::shared_ptr<volatile char[]> buffer;
@@ -26,3 +22,12 @@ namespace Async {
             off_t file_offset;
     };
 };
+
+
+
+
+auto Async::IOReadRequest::copy_buffer() -> std::shared_ptr<char[]> {
+    auto copy = std::shared_ptr<char[]>(new char[nbytes]);
+    std::copy_n(buffer.get(), nbytes, copy.get());
+    return copy;
+}

@@ -24,19 +24,22 @@ class InFlightAIORequest {
 
 class AIOManager {
     public:
-        static auto enqueue_and_start_read(FILE* fp, Async::IOReadRequest request) -> InFlightAIORequest {
-            auto aio_request = InFlightAIORequest(
-                request,
-                std::make_unique<struct aiocb>((struct aiocb) {
-                    .aio_fildes = fileno(fp),
-                    .aio_lio_opcode = LIO_READ,
-                    .aio_buf = request.underlying_buffer().get(),
-                    .aio_nbytes = request.size(),
-                    .aio_offset = request.offset(),
-                })
-            );
-
-            aio_read(aio_request.aio_control_block().get());
-            return aio_request;
-        }
+        static auto enqueue_and_start_read(FILE* fp, Async::IOReadRequest request) -> InFlightAIORequest;
 };
+
+
+auto AIOManager::enqueue_and_start_read(FILE* fp, Async::IOReadRequest request) -> InFlightAIORequest {
+    auto aio_request = InFlightAIORequest(
+        request,
+        std::make_unique<struct aiocb>((struct aiocb) {
+            .aio_fildes = fileno(fp),
+            .aio_lio_opcode = LIO_READ,
+            .aio_buf = request.underlying_buffer().get(),
+            .aio_nbytes = request.size(),
+            .aio_offset = request.offset(),
+        })
+    );
+
+    aio_read(aio_request.aio_control_block().get());
+    return aio_request;
+}

@@ -13,6 +13,8 @@
 
 using std::chrono_literals::operator""ms;
 
+// TODO: when updating build process, move this into an implementation file
+
 // NOTE: This class repeatedly polls the state of various IO jobs via a syscall
 // this is probably not ideal and in the future should be upgraded to use a more
 // efficient mechanism, aio allows us to suspend a thread until a tracked job is complete
