@@ -45,7 +45,6 @@ namespace Async {
                 return completed_jobs;
             };
 
-            // TODO: embed fp within the request?
             auto queue_read(FILE* fp, Async::IOReadRequest request, Callback callback) -> void {
                 auto in_flight_request = AIOManager::enqueue_and_start_read(fp, request);
                 auto lock = std::lock_guard<SpinLock>(spinlock);

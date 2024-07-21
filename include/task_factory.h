@@ -33,7 +33,6 @@ namespace Async {
 
             template <typename T>
             auto when_all(std::vector<Task<T>> tasks) -> Task<std::vector<T>>;
-
         private:
             std::shared_ptr<TimingPollSource> timing_poll_source;
             std::shared_ptr<IOPollSource> io_poll_source;
