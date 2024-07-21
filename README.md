@@ -70,6 +70,27 @@ value_source.complete(100);
 std::cout << task.block();
 ```
 
+### IO Tasks
+A very "obvious" kind of async computation is that of File IO. Currently the library only supports async read operations, an example of using the library to read files asynchronously is provided below.
+```cpp
+auto task_factory = Async::TaskFactory(/* N_WORKERS = */ 3);
+auto io_source = task_factory.io_source();
+
+auto fp = std::unique_ptr<FILE, decltype(&fclose)>(fopen("tests/io.txt", "r"), &fclose);
+auto io_req = Async::IOReadRequest(1024, 0);
+auto read_file = [](auto req) {
+    auto body = std::string(req.copy_buffer().get(), req.size());
+    std::cout << "Read from file: " << body << std::endl;
+    return Async::Unit();
+}
+
+auto task = io_source.read(fp.get(), io_req)
+                     .map<Async::Unit>(read_file);
+
+task.block();
+```
+
+
 ### Combinators
 Alongside these simple basics, tasks can also be combined using the `when_any` and `when_all` combinators. Using them is also rather simple, a (truncated) example is found below.
 ```cpp
@@ -95,4 +116,4 @@ for (auto x: when_all_task.block()) { std::cout << x << '\n'; }
 ```
 
 ## TODO
- - Async IO poll sources
+ - Better build process
