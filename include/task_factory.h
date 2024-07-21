@@ -6,6 +6,7 @@
 #include "scheduler/scheduler.h"
 #include "task_value_source.h"
 #include "task_timer_source.h"
+#include "task_io_source.h"
 #include "task.h"
 
 namespace Async {
@@ -21,6 +22,8 @@ namespace Async {
             auto value_source() -> TaskValueSource<T>;
 
             auto timer_source() -> TaskTimerSource;
+
+            auto io_source() -> TaskIOSource;
             
             template <typename T>
             auto create(std::function<T(void)> f) -> Task<T>;
@@ -31,8 +34,8 @@ namespace Async {
             template <typename T>
             auto when_all(std::vector<Task<T>> tasks) -> Task<std::vector<T>>;
         private:
-
             std::shared_ptr<TimingPollSource> timing_poll_source;
+            std::shared_ptr<IOPollSource> io_poll_source;
             Async::Scheduler scheduler;
     };
 };
@@ -42,12 +45,14 @@ namespace Async {
 // Implementation
 Async::TaskFactory::TaskFactory(int n_workers) :
     timing_poll_source(std::make_shared<Async::TimingPollSource>()),
-    scheduler(n_workers, { timing_poll_source })
+    io_poll_source(std::make_shared<Async::IOPollSource>()),
+    scheduler(n_workers, { timing_poll_source, io_poll_source })
 {}
 
 template <typename T>
 auto Async::TaskFactory::value_source() -> TaskValueSource<T> { return TaskValueSource<T>(scheduler); }
 auto Async::TaskFactory::timer_source() -> TaskTimerSource { return TaskTimerSource(scheduler, *timing_poll_source); }
+auto Async::TaskFactory::io_source() -> TaskIOSource { return TaskIOSource(scheduler, *io_poll_source); }
 
 
 template <typename T>
