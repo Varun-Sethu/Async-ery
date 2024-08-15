@@ -4,7 +4,7 @@
 #include <thread>
 #include <memory>
 
-#include "util/timing_wheel_hierarchical.h"
+#include "timing/structures/timing_wheel_hierarchical.h"
 
 using std::chrono_literals::operator""ms;
 

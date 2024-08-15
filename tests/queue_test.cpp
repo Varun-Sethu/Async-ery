@@ -10,6 +10,7 @@ auto main() -> int {
     auto job_results = std::map<int, bool>();
     auto scheduler = Async::Scheduler(0, {});
 
+
     std::srand(std::time(nullptr));
 
     auto get_job_id = [&job_id, &job_results]() -> int {
