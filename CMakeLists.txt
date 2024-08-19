@@ -32,8 +32,7 @@ add_compile_options(-Wall
                     -Wsuggest-override
                     -Wzero-as-null-pointer-constant
                     -fstack-protector-strong
-                    #-fanalyzer
-                    )
+                    -fanalyzer)
 
 target_include_directories(${PROJECT_NAME} PUBLIC include)
 target_include_directories(${PROJECT_NAME} PRIVATE src/${PROJECT_NAME})
