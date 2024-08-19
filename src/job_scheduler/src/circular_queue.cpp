@@ -1,6 +1,10 @@
-#include "scheduler/circular_queue.h"
+#include "job_scheduler/interface/job.h"
+#include "job_scheduler/circular_queue.h"
 
-auto CircularQueue::enqueue(Async::SchedulerJob&& item) -> void {
+
+
+// Implementation
+auto CircularQueue::enqueue(Scheduler::Job&& item) -> void {
     std::lock_guard<SpinLock> lock(spinlock);
 
     auto is_full = (tail + 1) % queue.size() == head;
@@ -11,7 +15,7 @@ auto CircularQueue::enqueue(Async::SchedulerJob&& item) -> void {
     current_size.fetch_add(1, std::memory_order_relaxed);   
 }
 
-auto CircularQueue::dequeue() -> std::optional<Async::SchedulerJob> {
+auto CircularQueue::dequeue() -> std::optional<Scheduler::Job> {
     std::lock_guard<SpinLock> lock(spinlock);
     if (head == tail) { return std::nullopt; }
 

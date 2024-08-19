@@ -6,7 +6,7 @@
 using std::chrono_literals::operator""ms, std::chrono_literals::operator""min;
 
 Async::TimingPollSource::TimingPollSource() : 
-    wheel(HierarchicalTimingWheel<Async::SchedulerJob>(
+    wheel(HierarchicalTimingWheel<Scheduler::Job>(
         /* wheel_tick_size = */ 50ms,
         /* level_sizes = */ {
             1min / 50ms,    // minute wheel (ticks that map to the resolution of 1 minute)
@@ -16,13 +16,13 @@ Async::TimingPollSource::TimingPollSource() :
     })) {}
 
 
-auto Async::TimingPollSource::schedule(std::chrono::milliseconds expiry, Async::SchedulerJob task) -> void {
+auto Async::TimingPollSource::schedule(std::chrono::milliseconds expiry, Scheduler::Job task) -> void {
     std::lock_guard<SpinLock> lock(spinlock);
     wheel.schedule(expiry, std::move(task));
 }
 
 auto Async::TimingPollSource::poll_frequency() -> std::chrono::milliseconds { return 5ms; }
-auto Async::TimingPollSource::poll() -> std::vector<Async::SchedulerJob> {
+auto Async::TimingPollSource::poll() -> std::vector<Scheduler::Job> {
     // busy wait for the lock - we busy wait as the other thread (schedule) will not maintain
     // the lock for that long so its illogical to yield our time slice
     std::lock_guard<SpinLock> lock(spinlock);

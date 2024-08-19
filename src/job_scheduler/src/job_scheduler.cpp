@@ -3,13 +3,18 @@
 #include <functional>
 #include <iostream>
 #include <chrono>
+#include <condition_variable>
+#include <mutex>
+#include <stop_token>
 
 #include "timing/structures/timing_wheel.h"
-#include "scheduler/scheduler.h"
+#include "job_scheduler/job_scheduler.h"
 
 using std::chrono_literals::operator""ms, std::chrono_literals::operator""min;
+using namespace Scheduler;
 
-Async::Scheduler::Scheduler(int n_workers, std::vector<Async::Scheduler::PollSource> poll_sources) : job_queue(1024) {
+
+JobScheduler::JobScheduler(int n_workers, PollSources poll_sources) : job_queue(1024) {
     auto queues = std::views::iota(0, n_workers) | std::views::transform([](auto id) { return CircularQueue(1024); });
     this->worker_queues = std::vector<CircularQueue>(
         std::move_iterator(queues.begin()),
@@ -24,9 +29,9 @@ Async::Scheduler::Scheduler(int n_workers, std::vector<Async::Scheduler::PollSou
 }
 
 
-auto Async::Scheduler::queue(SchedulingContext ctx, SchedulerJob job_fn) -> void { queue_batch(ctx, { job_fn }); }
-auto Async::Scheduler::queue_batch(SchedulingContext ctx, std::vector<SchedulerJob> jobs) -> void {
-    if (ctx == SchedulingContext::empty()) {
+auto JobScheduler::queue(Context ctx, Job job_fn) -> void { queue_batch(ctx, { job_fn }); }
+auto JobScheduler::queue_batch(Context ctx, std::vector<Job> jobs) -> void {
+    if (ctx == Context::empty()) {
         for (auto& job : jobs) { job_queue.enqueue(std::move(job)); }
     } else {
         for (auto& job : jobs) { worker_queues[ctx.worker_id.value()].enqueue(std::move(job)); }
@@ -38,8 +43,8 @@ auto Async::Scheduler::queue_batch(SchedulingContext ctx, std::vector<SchedulerJ
 // each poll source has a defined poll frequency, poll sources provide poll frequencies so that they can limit the amount of contention
 // over resources they may be polling over (imagine a timer poll), the function will keep polling until the stop token is triggered
 // after a poll job is complete it will then schedule it n-seconds in the future based on the poll frequency
-auto Async::Scheduler::begin_poll(std::stop_token stop_token, std::vector<Async::Scheduler::PollSource> poll_sources) -> void {
-    auto poll_scheduler = TimingWheel<Async::Scheduler::PollSource>(
+auto JobScheduler::begin_poll(std::stop_token stop_token, PollSources poll_sources) -> void {
+    auto poll_scheduler = TimingWheel<PollSource>(
         /* wheel_tick_size = */ 10ms,
         /* wheel_size = */ 1min / 10ms);
 
@@ -50,7 +55,7 @@ auto Async::Scheduler::begin_poll(std::stop_token stop_token, std::vector<Async:
     // now continuously poll the poll sources, only running them when they are scheduled in the future
     while (!stop_token.stop_requested()) {
         for (auto& ready_poll : poll_scheduler.advance()) {
-            queue_batch(SchedulingContext::empty(), ready_poll->poll());
+            queue_batch(Context::empty(), ready_poll->poll());
             schedule_poll_source(ready_poll->poll_frequency(), ready_poll);
         }
     }
@@ -59,7 +64,7 @@ auto Async::Scheduler::begin_poll(std::stop_token stop_token, std::vector<Async:
 // next_worker_job is a helper function that will attempt to find the next job for a worker to execute 
 // it will first check the worker's queue, then the global queue, and finally evict a job from another worker
 // queue
-auto Async::Scheduler::next_worker_job(int worker_id) -> std::optional<SchedulerJob> {
+auto JobScheduler::next_worker_job(int worker_id) -> std::optional<Job> {
     if (auto job = worker_queues[worker_id].dequeue(); job.has_value()) { return job; }
 
     // check the global queue for any jobs, we do this "naively" by first testing for a job
@@ -85,8 +90,8 @@ auto Async::Scheduler::next_worker_job(int worker_id) -> std::optional<Scheduler
 
 // begin_worker is the main scheduler loop, it will keep picking off tasks from the run queue while there is
 // still work to be done
-auto Async::Scheduler::begin_worker(int worker_id, std::stop_token stop_token) -> void {
-    auto context_for_worker = SchedulingContext(worker_id);
+auto JobScheduler::begin_worker(int worker_id, std::stop_token stop_token) -> void {
+    auto context_for_worker = Context(worker_id);
 
     while (!stop_token.stop_requested()) {
         auto job = next_worker_job(worker_id);

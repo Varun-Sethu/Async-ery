@@ -1,8 +1,8 @@
 #include "io/io_poll_source.h"
 
-auto Async::IOPollSource::poll() -> std::vector<SchedulerJob> {                
+auto Async::IOPollSource::poll() -> std::vector<Scheduler::Job> {                
     auto lock = std::lock_guard<SpinLock>(spinlock);
-    auto completed_jobs = std::vector<SchedulerJob>();
+    auto completed_jobs = std::vector<Scheduler::Job>();
     auto pending_requests = std::vector<std::pair<Callback, InFlightAIORequest>>();
 
     for (auto& [callback, request] : in_flight_requests) {

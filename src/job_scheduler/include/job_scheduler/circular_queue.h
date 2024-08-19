@@ -6,8 +6,7 @@
 #include <vector>
 
 #include "concurrency/spinlock.h"
-#include "types.h"
-
+#include "job_scheduler/interface/job.h"
 
 class CircularQueue {
     public:
@@ -24,8 +23,8 @@ class CircularQueue {
             return *this;
         }
 
-        auto enqueue(Async::SchedulerJob&& item) -> void;
-        auto dequeue() -> std::optional<Async::SchedulerJob>;
+        auto enqueue(Scheduler::Job&& item) -> void;
+        auto dequeue() -> std::optional<Scheduler::Job>;
 
         // Note: size has a relaxed memory order, hence even tho size may return a non-zero value
         // there is no guarantee that the next time you attempt to dequeue, the value will be non-null
@@ -37,7 +36,7 @@ class CircularQueue {
         auto resize() -> void;
 
 
-        std::vector<Async::SchedulerJob> queue;
+        std::vector<Scheduler::Job> queue;
         size_t head = 0;
         size_t tail = 0;
 

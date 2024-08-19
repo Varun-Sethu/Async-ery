@@ -7,7 +7,7 @@
 
 #include "aio.h"
 #include "io_request.h"
-#include "scheduler/poll_source.h"
+#include "job_scheduler/interface/poll_source.h"
 #include "concurrency/spinlock.h"
 
 using std::chrono_literals::operator""ms;
@@ -17,12 +17,12 @@ using std::chrono_literals::operator""ms;
 // efficient mechanism, aio allows us to suspend a thread until a tracked job is complete
 // perhaps we can use this to avoid polling
 namespace Async {
-    class IOPollSource : public Async::IPollSource {
+    class IOPollSource : public Scheduler::IPollSource {
         using Callback = std::function<void(Async::IOReadRequest)>;
 
         public:
             auto poll_frequency() -> std::chrono::milliseconds override { return 5ms; };
-            auto poll() -> std::vector<SchedulerJob> override;
+            auto poll() -> std::vector<Scheduler::Job> override;
             auto queue_read(FILE* fp, Async::IOReadRequest request, Callback callback) -> void;
 
         private:
