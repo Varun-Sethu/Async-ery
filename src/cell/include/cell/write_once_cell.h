@@ -7,7 +7,7 @@
 #include <condition_variable>
 
 #include "cell.h"
-#include "scheduler/scheduler.h"
+#include "job_scheduler/job_scheduler_intf.h"
 
 namespace Cell {
     /// WriteOnceCell is a class that represents a cell that can be written to once
@@ -15,7 +15,7 @@ namespace Cell {
     template <typename T>
     class WriteOnceCell : public ICell<T> {
         public:
-            WriteOnceCell(Async::Scheduler& scheduler);
+            WriteOnceCell(Scheduler::IJobScheduler& scheduler);
 
             auto read() const -> std::optional<T> override;
 
@@ -26,8 +26,8 @@ namespace Cell {
             // for this fn, one method takes no scheduling context so uses an empty scheduling context
             // when dispatching continuations and the other takes a defined context, for more information
             // on scheduling contexts see the documentation under scheduler.h
-            auto write(T write_val) -> bool { return write(Async::SchedulingContext::empty(), write_val); }
-            auto write(Async::SchedulingContext ctx, T write_val) -> bool;
+            auto write(T write_val) -> bool { return write(Scheduler::Context::empty(), write_val); }
+            auto write(Scheduler::Context ctx, T write_val) -> bool;
 
             // await takes a callback function and calls it with the value
             // of the WriteOnceCell when it is available.
@@ -45,9 +45,9 @@ namespace Cell {
             std::vector<Callback<T>> callbacks;
             std::condition_variable_any cell_filled;
 
-            Async::Scheduler& scheduler;
+            Scheduler::IJobScheduler& scheduler;
     };
-};
+}
 
 
 
@@ -56,7 +56,7 @@ namespace Cell {
 
 // Implementation
 template <typename T>
-Cell::WriteOnceCell<T>::WriteOnceCell(Async::Scheduler& scheduler) : scheduler(scheduler) {}
+Cell::WriteOnceCell<T>::WriteOnceCell(Scheduler::IJobScheduler& scheduler) : scheduler(scheduler) {}
 
 template <typename T>
 auto Cell::WriteOnceCell<T>::read() const -> std::optional<T> {
@@ -65,7 +65,7 @@ auto Cell::WriteOnceCell<T>::read() const -> std::optional<T> {
 }
 
 template <typename T>
-auto Cell::WriteOnceCell<T>::write(Async::SchedulingContext ctx, T write_val) -> bool {
+auto Cell::WriteOnceCell<T>::write(Scheduler::Context ctx, T write_val) -> bool {
     {
         std::unique_lock lock(mutex);
         if (value.has_value()) { return false; }
@@ -96,7 +96,7 @@ auto Cell::WriteOnceCell<T>::await(Callback<T> callback) -> void {
     std::shared_lock lock(mutex);
     if (value.has_value()) {
         auto value_inner = value.value();
-        scheduler.queue(Async::SchedulingContext::empty(), [=] (auto ctx) { callback(ctx, value_inner); });
+        scheduler.queue(Scheduler::Context::empty(), [=] (auto ctx) { callback(ctx, value_inner); });
         return;
     }
 

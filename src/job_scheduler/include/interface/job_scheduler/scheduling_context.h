@@ -22,4 +22,4 @@ namespace Scheduler {
         Context(int worker_id) : worker_id(worker_id) {}
         std::optional<int> worker_id;
     };
-};
+}

@@ -12,7 +12,7 @@ auto delay_by(Async::TaskTimerSource& timer_source, std::chrono::milliseconds am
     return [&timer_source, amount](int value) -> Async::Task<int> {
         return timer_source
                 .after(amount)
-                .map<int>([value](auto _) -> int { return value; });
+                .map<int>([value](__attribute__((unused)) auto _) -> int { return value; });
     };
 }
 
@@ -30,7 +30,7 @@ auto when_any_computation(Async::TaskFactory& task_factory, Async::TaskValueSour
             .map<int>([](int x) { return x * 2; })
             .bind<int>(delay_by(timer_source, 300ms)),
     });
-};
+}
 
 // models a computation that resolves when all of the tasks resolve
 auto when_all_computation(Async::TaskFactory& task_factory, Async::TaskValueSource<int>& task_source, Async::TaskTimerSource& timer_source) -> Async::Task<std::vector<int>> {

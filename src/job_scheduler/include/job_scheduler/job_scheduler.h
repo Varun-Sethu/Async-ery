@@ -5,12 +5,12 @@
 #include <optional>
 
 #include "job_scheduler/circular_queue.h"
-#include "job_scheduler/interface/job_scheduler_intf.h"
-#include "job_scheduler/interface/scheduling_context.h"
-#include "job_scheduler/interface/poll_source.h"
+#include "job_scheduler/job_scheduler_intf.h"
+#include "job_scheduler/scheduling_context.h"
+#include "job_scheduler/poll_source.h"
 
 namespace Scheduler {
-    class JobScheduler {
+    class JobScheduler : public IJobScheduler {
     public:
         using PollSource = std::shared_ptr<IPollSource>;
         using PollSources = std::vector<PollSource>;
@@ -36,8 +36,5 @@ namespace Scheduler {
         std::vector<std::jthread> worker_threads;
         std::jthread poll_thread;
     };
-
-
-    static_assert(IJobScheduler<JobScheduler>);
-};
+}
 

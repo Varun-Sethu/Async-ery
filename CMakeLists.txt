@@ -14,7 +14,7 @@ add_library(${PROJECT_NAME}
     src/${PROJECT_NAME}/task_io_source.cpp
 )
 
-target_link_libraries(${PROJECT_NAME} PUBLIC job_scheduler cell io timing timing_structures concurrency)
+target_link_libraries(${PROJECT_NAME} PUBLIC job_scheduler_intf cell io timing timing_structures concurrency)
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 20)
 set_property(TARGET ${PROJECT_NAME} PROPERTY LINKER_LANGUAGE CXX)

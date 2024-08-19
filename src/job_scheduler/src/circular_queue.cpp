@@ -1,4 +1,4 @@
-#include "job_scheduler/interface/job.h"
+#include "job_scheduler/job.h"
 #include "job_scheduler/circular_queue.h"
 
 

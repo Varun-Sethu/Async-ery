@@ -3,7 +3,7 @@
 #include <vector>
 #include <chrono>
 
-#include "job_scheduler/interface/job.h"
+#include "job_scheduler/job.h"
 
 // IPollSource is a simple interface that allows for the implementation of a poll source
 // poll sources are objects that must be checked periodically for new work and to drive the completion
@@ -16,4 +16,4 @@ namespace Scheduler {
         virtual auto poll_frequency() -> std::chrono::milliseconds = 0;
         [[nodiscard]] virtual auto poll() -> std::vector<Job> = 0;
     };
-};
+}

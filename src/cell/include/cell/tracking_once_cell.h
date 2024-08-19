@@ -6,7 +6,7 @@
 #include <condition_variable>
 #include <functional>
 
-#include "scheduler/scheduler.h"
+#include "job_scheduler/job_scheduler_intf.h"
 #include "cell.h"
 
 namespace Cell {
@@ -46,7 +46,7 @@ namespace Cell {
 
             mutable std::shared_mutex mutex;
     };
-};
+}
 
 
 

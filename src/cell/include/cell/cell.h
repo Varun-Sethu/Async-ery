@@ -7,11 +7,11 @@
 #include <functional>
 #include <vector>
 
-#include "scheduler/types.h"
+#include "job_scheduler/scheduling_context.h"
 
 namespace Cell {
     template <typename T>
-    using Callback = std::function<void(Async::SchedulingContext, T)>;
+    using Callback = std::function<void(Scheduler::Context, T)>;
 
     template <typename T>
     class ICell {

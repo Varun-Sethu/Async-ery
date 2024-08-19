@@ -1,14 +1,15 @@
 #include <map>
 #include <iostream>
 
-#include "scheduler/circular_queue.h"
-#include "scheduler/scheduler.h"
+#include "job_scheduler/circular_queue.h"
+#include "job_scheduler/job_scheduler.h"
+#include "job_scheduler/scheduling_context.h"
 
 auto main() -> int {
     auto queue = CircularQueue(4);
     auto job_id = 0;
     auto job_results = std::map<int, bool>();
-    auto scheduler = Async::Scheduler(0, {});
+    auto scheduler = Scheduler::JobScheduler(0, {});
 
 
     std::srand(std::time(nullptr));
@@ -23,7 +24,7 @@ auto main() -> int {
         auto num_jobs = std::rand() % 20;
         for (auto j = 0; j < num_jobs; j++) {
             auto job_id = get_job_id();
-            queue.enqueue([&job_results, job_id](auto _){
+            queue.enqueue([&job_results, job_id](__attribute__((unused)) auto _){
                 std::cout << "Running job " << job_id << std::endl;
                 job_results[job_id] = true;
             });
@@ -35,13 +36,13 @@ auto main() -> int {
         auto num_jobs_to_run = std::rand() % queue.size();
         for (size_t j = 0; j < num_jobs_to_run; j++) {
             auto job = queue.dequeue().value();
-            job(Async::SchedulingContext::empty());
+            job(Scheduler::Context::empty());
         }
     }
 
     // run all remaining jobs
     while (auto job = queue.dequeue()) {
-        if (job.has_value()) { job.value()(Async::SchedulingContext::empty()); }
+        if (job.has_value()) { job.value()(Scheduler::Context::empty()); }
         else { break; }
     }
 

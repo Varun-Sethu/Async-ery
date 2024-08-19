@@ -6,7 +6,7 @@ auto InFlightAIORequest::is_completed() -> bool {
 }
 
 
-auto InFlightAIORequest::underlying_request() -> Async::IOReadRequest const {
+auto InFlightAIORequest::underlying_request() const -> Async::IOReadRequest {
     return request;
 }
 
@@ -18,7 +18,7 @@ auto InFlightAIORequest::aio_control_block() -> std::shared_ptr<struct aiocb>& {
 auto AIOManager::enqueue_and_start_read(FILE* fp, Async::IOReadRequest request) -> InFlightAIORequest {
     auto aio_request = InFlightAIORequest(
         request,
-        std::make_unique<struct aiocb>((struct aiocb) {
+        std::make_shared<struct aiocb>((struct aiocb) {
             .aio_fildes = fileno(fp),
             .aio_lio_opcode = LIO_READ,
             .aio_buf = request.underlying_buffer().get(),

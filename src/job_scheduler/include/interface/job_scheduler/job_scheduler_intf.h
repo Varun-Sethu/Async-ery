@@ -2,8 +2,8 @@
 
 #include <concepts>
 
-#include "job_scheduler/interface/job.h"
-#include "job_scheduler/interface/scheduling_context.h"
+#include "job_scheduler/job.h"
+#include "job_scheduler/scheduling_context.h"
 
 // Conforming to this concept implies that some type T is indeed a scheduler and can be used as such
 // for scheduling jobs

@@ -5,4 +5,3 @@ auto Async::IOReadRequest::copy_buffer() const -> std::shared_ptr<char[]> {
     std::copy_n(buffer.get(), nbytes, copy.get());
     return copy;
 }
-

@@ -6,7 +6,7 @@
 #include <ranges>
 
 #include "types.h"
-#include "scheduler/scheduler.h"
+#include "job_scheduler/job_scheduler_intf.h"
 #include "cell/write_once_cell.h"
 #include "cell/tracking_once_cell.h"
 #include "cell/when_any_cell.h"
@@ -26,7 +26,7 @@ namespace Async {
         friend class TaskValueSource<T>;   // for exposing private Task constructor that takes a cell
 
         public:
-            Task(Async::Scheduler& scheduler, std::function<T(void)> f);
+            Task(Scheduler::IJobScheduler& scheduler, std::function<T(void)> f);
 
             
             template <typename G>
@@ -42,21 +42,21 @@ namespace Async {
 
             // when_any is a task that resolves when any of the provided underlying tasks are resolved
             // under the hood the task claims shared ownership of the cells it is tracking
-            static auto when_any(Async::Scheduler& scheduler, std::vector<Task<T>> tasks) -> Task<T>;
+            static auto when_any(Scheduler::IJobScheduler& scheduler, std::vector<Task<T>> tasks) -> Task<T>;
 
             // when_all resolves when all the underlying tasks have resolved, returning the values of the cells
             // in a final vector whose order matches the order of the tasks
-            static auto when_all(Async::Scheduler& scheduler, std::vector<Task<T>> tasks) -> Task<std::vector<T>>;
+            static auto when_all(Scheduler::IJobScheduler& scheduler, std::vector<Task<T>> tasks) -> Task<std::vector<T>>;
 
         protected:
             // ICell are an implementation detail so creation of Tasks from them is restricted
             // to be exclusively a private constructor
-            Task(Async::Scheduler& scheduler, std::shared_ptr<Cell::ICell<T>> cell) : 
+            Task(Scheduler::IJobScheduler& scheduler, std::shared_ptr<Cell::ICell<T>> cell) : 
                 cell(cell), scheduler(scheduler) {}
         
         private:
             std::shared_ptr<Cell::ICell<T>> cell;
-            Async::Scheduler& scheduler;
+            Scheduler::IJobScheduler& scheduler;
     };
 }
 
@@ -67,10 +67,10 @@ namespace Async {
 
 // Implementation
 template <typename T>
-Async::Task<T>::Task(Async::Scheduler& scheduler, std::function<T(void)> f) : scheduler(scheduler) {
+Async::Task<T>::Task(Scheduler::IJobScheduler& scheduler, std::function<T(void)> f) : scheduler(scheduler) {
     auto cell = std::make_shared<Cell::WriteOnceCell<T>>(scheduler);
     this->cell = cell;
-    this->scheduler.queue(Async::SchedulingContext::empty(), [cell, f](auto ctx) {
+    this->scheduler.queue(Scheduler::Context::empty(), [cell, f](auto ctx) {
         auto result = f();
         cell->write(ctx, result);
     });
@@ -97,7 +97,7 @@ template <typename T>
 template <typename G>
 auto Async::Task<T>::bind(std::function<Task<G>(T)> f) -> Task<G> {
     auto tracking_cell = std::make_shared<Cell::TrackingOnceCell<G>>();
-    this->cell->await([tracking_cell, f](auto _, T value) {
+    this->cell->await([tracking_cell, f](__attribute__((unused)) auto _, T value) {
         auto new_task = f(value);
         tracking_cell->track(new_task.cell);
     });
@@ -127,7 +127,7 @@ auto Async::Task<T>::block() -> T { return this->cell->block(); }
 
 
 template <typename T>
-auto Async::Task<T>::when_any(Async::Scheduler& scheduler, std::vector<Task<T>> tasks) -> Task<T> {
+auto Async::Task<T>::when_any(Scheduler::IJobScheduler& scheduler, std::vector<Task<T>> tasks) -> Task<T> {
     auto cell_view = tasks | std::views::transform([](auto& task) { return task.cell; });
     auto cell_list = std::vector<std::shared_ptr<Cell::ICell<T>>>(cell_view.begin(), cell_view.end()); 
 
@@ -136,9 +136,9 @@ auto Async::Task<T>::when_any(Async::Scheduler& scheduler, std::vector<Task<T>> 
 
 
 template <typename T>
-auto Async::Task<T>::when_all(Async::Scheduler& scheduler, std::vector<Task<T>> tasks) -> Task<std::vector<T>> {
+auto Async::Task<T>::when_all(Scheduler::IJobScheduler& scheduler, std::vector<Task<T>> tasks) -> Task<std::vector<T>> {
     auto cell_view = tasks | std::views::transform([](auto& task) { return task.cell; });
     auto cell_list = std::vector<std::shared_ptr<Cell::ICell<T>>>(cell_view.begin(), cell_view.end());
 
     return Task<std::vector<T>>(scheduler, std::make_shared<Cell::WhenAllCell<T>>(scheduler, cell_list));
-};
+}

@@ -1,13 +1,13 @@
 #pragma once
 
 #include "async_lib/task_value_source.h"
-#include "scheduler/scheduler.h"
+#include "job_scheduler/job_scheduler_intf.h"
 #include "io/io_poll_source.h"
 
 namespace Async {
     class TaskIOSource {
         public:
-            TaskIOSource(Async::Scheduler& scheduler, Async::IOPollSource& io_poll_source) : 
+            TaskIOSource(Scheduler::IJobScheduler& scheduler, Async::IOPollSource& io_poll_source) : 
                 scheduler(scheduler),
                 io_poll_source(io_poll_source) {}
 
@@ -15,7 +15,7 @@ namespace Async {
             auto read(FILE* fp, Async::IOReadRequest request) -> Async::Task<Async::IOReadRequest>;
 
         private:
-            Async::Scheduler& scheduler;
+            Scheduler::IJobScheduler& scheduler;
             Async::IOPollSource& io_poll_source;
     };
 }

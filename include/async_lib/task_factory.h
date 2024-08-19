@@ -3,7 +3,7 @@
 #include <memory>
 #include <functional>
 
-#include "scheduler/scheduler.h"
+#include "job_scheduler/scheduler_factory.h"
 #include "async_lib/task_io_source.h"
 #include "async_lib/task_timer_source.h"
 #include "task_value_source.h"
@@ -36,9 +36,9 @@ namespace Async {
         private:
             std::shared_ptr<TimingPollSource> timing_poll_source;
             std::shared_ptr<IOPollSource> io_poll_source;
-            Async::Scheduler scheduler;
+            std::unique_ptr<Scheduler::IJobScheduler> scheduler;
     };
-};
+}
 
 
 
@@ -46,20 +46,20 @@ namespace Async {
 Async::TaskFactory::TaskFactory(int n_workers) :
     timing_poll_source(std::make_shared<Async::TimingPollSource>()),
     io_poll_source(std::make_shared<Async::IOPollSource>()),
-    scheduler(n_workers, { timing_poll_source, io_poll_source })
+    scheduler(Scheduler::create_scheduler(n_workers, { timing_poll_source, io_poll_source }))
 {}
 
 template <typename T>
-auto Async::TaskFactory::value_source() -> TaskValueSource<T> { return TaskValueSource<T>(scheduler); }
-auto Async::TaskFactory::timer_source() -> TaskTimerSource { return TaskTimerSource(scheduler, *timing_poll_source); }
-auto Async::TaskFactory::io_source() -> TaskIOSource { return TaskIOSource(scheduler, *io_poll_source); }
+auto Async::TaskFactory::value_source() -> TaskValueSource<T> { return TaskValueSource<T>(*scheduler); }
+auto Async::TaskFactory::timer_source() -> TaskTimerSource { return TaskTimerSource(*scheduler, *timing_poll_source); }
+auto Async::TaskFactory::io_source() -> TaskIOSource { return TaskIOSource(*scheduler, *io_poll_source); }
 
 
 template <typename T>
-auto Async::TaskFactory::create(std::function<T(void)> f) -> Task<T> { return Task<T>(scheduler, f); }
+auto Async::TaskFactory::create(std::function<T(void)> f) -> Task<T> { return Task<T>(*scheduler, f); }
 
 template <typename T>
-auto Async::TaskFactory::when_any(std::vector<Task<T>> tasks) -> Task<T> { return Task<T>::when_any(scheduler, tasks); }
+auto Async::TaskFactory::when_any(std::vector<Task<T>> tasks) -> Task<T> { return Task<T>::when_any(*scheduler, tasks); }
 
 template <typename T>
-auto Async::TaskFactory::when_all(std::vector<Task<T>> tasks) -> Task<std::vector<T>> { return Task<T>::when_all(scheduler, tasks); }
+auto Async::TaskFactory::when_all(std::vector<Task<T>> tasks) -> Task<std::vector<T>> { return Task<T>::when_all(*scheduler, tasks); }

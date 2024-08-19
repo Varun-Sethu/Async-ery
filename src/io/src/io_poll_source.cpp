@@ -7,10 +7,12 @@ auto Async::IOPollSource::poll() -> std::vector<Scheduler::Job> {
 
     for (auto& [callback, request] : in_flight_requests) {
         if (request.is_completed()) {
-            completed_jobs.push_back([callback, request](auto ctx) mutable {
+            auto thingo = [callback, request = std::move(request)](auto ctx) {
                 auto underlying = request.underlying_request();
                 callback(underlying);
-            });
+            };
+
+            completed_jobs.emplace_back(std::move(thingo));
         } else {
             pending_requests.push_back({ callback, std::move(request) });
         }

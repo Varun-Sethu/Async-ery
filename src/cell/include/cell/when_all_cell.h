@@ -7,7 +7,7 @@
 
 #include "cell.h"
 #include "write_once_cell.h"
-#include "scheduler/scheduler.h"
+#include "job_scheduler/job_scheduler_intf.h"
 
 namespace Cell {
     // WhenAllCell, like WhenAnyCell assumes ownership of the cells it is tracking
@@ -15,7 +15,7 @@ namespace Cell {
     template <typename T>
     class WhenAllCell : public ICell<std::vector<T>> {
         public:
-            WhenAllCell(Async::Scheduler& scheduler, std::vector<std::shared_ptr<ICell<T>>> cells);
+            WhenAllCell(Scheduler::IJobScheduler& scheduler, std::vector<std::shared_ptr<ICell<T>>> cells);
 
             auto read() const -> std::optional<std::vector<T>> override;
             auto await(Callback<std::vector<T>> callback) -> void override;
@@ -38,14 +38,14 @@ namespace Cell {
             std::shared_ptr<WriteOnceCell<std::vector<T>>> underlying_cell;
             std::vector<std::shared_ptr<ICell<T>>> cells;
     };
-};
+}
 
 
 
 
 // Implementation
 template <typename T>
-Cell::WhenAllCell<T>::WhenAllCell(Async::Scheduler& scheduler, std::vector<std::shared_ptr<ICell<T>>> cells) : 
+Cell::WhenAllCell<T>::WhenAllCell(Scheduler::IJobScheduler& scheduler, std::vector<std::shared_ptr<ICell<T>>> cells) : 
     underlying_cell(std::make_shared<WriteOnceCell<std::vector<T>>>(scheduler)),
     cells(cells)
 {
