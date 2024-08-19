@@ -1,15 +1,15 @@
 #include <map>
 #include <iostream>
 
-#include "job_scheduler/job_queue.h"
-#include "job_scheduler/job_scheduler.h"
-#include "job_scheduler/scheduling_context.h"
+#include "scheduler/job_queue.h"
+#include "scheduler/scheduler.h"
+#include "scheduler/scheduling_context.h"
 
 auto main() -> int {
     auto queue = JobQueue(4);
     auto job_id = 0;
     auto job_results = std::map<int, bool>();
-    auto scheduler = Scheduler::JobScheduler(0, {});
+    auto scheduler = Scheduler::Scheduler(0, {});
 
 
     std::srand(static_cast<unsigned int>(std::time(nullptr)));

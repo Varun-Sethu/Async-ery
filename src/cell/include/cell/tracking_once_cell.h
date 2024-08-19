@@ -6,7 +6,7 @@
 #include <condition_variable>
 #include <functional>
 
-#include "job_scheduler/job_scheduler_intf.h"
+#include "scheduler/scheduler_intf.h"
 #include "cell.h"
 
 namespace Cell {

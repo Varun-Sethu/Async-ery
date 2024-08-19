@@ -7,7 +7,7 @@
 #include <functional>
 #include <vector>
 
-#include "job_scheduler/scheduling_context.h"
+#include "scheduler/scheduling_context.h"
 
 namespace Cell {
     template <typename T>

@@ -1,6 +1,6 @@
 #include <assert.h>
 
-#include "job_scheduler/worker_pool.h"
+#include "scheduler/worker_pool.h"
 
 Scheduler::WorkerPool::WorkerPool(int n_workers) {
     for (int i = 0; i < n_workers; i++) {

@@ -2,10 +2,10 @@
 
 #include <optional>
 
-#include "job_scheduler/job_queue.h"
-#include "job_scheduler/job.h"
-#include "job_scheduler/job_worker.h"
-#include "job_scheduler/scheduling_context.h"
+#include "scheduler/job_queue.h"
+#include "scheduler/job.h"
+#include "scheduler/worker.h"
+#include "scheduler/scheduling_context.h"
 
 namespace Scheduler {
     class WorkerPool {

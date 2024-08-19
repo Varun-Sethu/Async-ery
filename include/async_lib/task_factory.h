@@ -3,7 +3,7 @@
 #include <memory>
 #include <functional>
 
-#include "job_scheduler/scheduler_factory.h"
+#include "scheduler/scheduler_factory.h"
 #include "async_lib/task_io_source.h"
 #include "async_lib/task_timer_source.h"
 #include "task_value_source.h"
@@ -36,7 +36,7 @@ namespace Async {
         private:
             std::shared_ptr<TimingPollSource> timing_poll_source;
             std::shared_ptr<IOPollSource> io_poll_source;
-            std::unique_ptr<Scheduler::IJobScheduler> scheduler;
+            std::unique_ptr<Scheduler::IScheduler> scheduler;
     };
 }
 

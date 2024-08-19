@@ -1,14 +1,14 @@
-project(job_scheduler)
+project(scheduler)
 
 # Actual target
 add_library(${PROJECT_NAME}
     include/${PROJECT_NAME}/job_queue.h
-    include/${PROJECT_NAME}/job_scheduler.h
-    include/${PROJECT_NAME}/job_worker.h
+    include/${PROJECT_NAME}/scheduler.h
+    include/${PROJECT_NAME}/worker.h
     include/${PROJECT_NAME}/worker_pool.h
-    src/job_scheduler.cpp
+    src/scheduler.cpp
     src/job_queue.cpp
-    src/job_worker.cpp
+    src/worker.cpp
     src/worker_pool.cpp
 )
 
@@ -36,7 +36,7 @@ set_target_properties(${PROJECT_NAME}
 
 # Interface target
 add_library(${PROJECT_NAME}_intf
-    include/interface/${PROJECT_NAME}/job_scheduler_intf.h
+    include/interface/${PROJECT_NAME}/scheduler_intf.h
     include/interface/${PROJECT_NAME}/poll_source.h
     include/interface/${PROJECT_NAME}/scheduling_context.h
     include/interface/${PROJECT_NAME}/job.h

@@ -7,7 +7,7 @@
 #include <condition_variable>
 
 #include "cell.h"
-#include "job_scheduler/job_scheduler_intf.h"
+#include "scheduler/scheduler_intf.h"
 
 namespace Cell {
     /// WriteOnceCell is a class that represents a cell that can be written to once
@@ -15,7 +15,7 @@ namespace Cell {
     template <typename T>
     class WriteOnceCell : public ICell<T> {
         public:
-            WriteOnceCell(Scheduler::IJobScheduler& scheduler);
+            WriteOnceCell(Scheduler::IScheduler& scheduler);
 
             auto read() const -> std::optional<T> override;
 
@@ -45,7 +45,7 @@ namespace Cell {
             std::vector<Callback<T>> callbacks;
             std::condition_variable_any cell_filled;
 
-            Scheduler::IJobScheduler& scheduler;
+            Scheduler::IScheduler& scheduler;
     };
 }
 
@@ -56,7 +56,7 @@ namespace Cell {
 
 // Implementation
 template <typename T>
-Cell::WriteOnceCell<T>::WriteOnceCell(Scheduler::IJobScheduler& scheduler) : scheduler(scheduler) {}
+Cell::WriteOnceCell<T>::WriteOnceCell(Scheduler::IScheduler& scheduler) : scheduler(scheduler) {}
 
 template <typename T>
 auto Cell::WriteOnceCell<T>::read() const -> std::optional<T> {

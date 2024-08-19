@@ -3,7 +3,7 @@
 #include <mutex>
 
 #include "task_value_source.h"
-#include "job_scheduler/job_scheduler_intf.h"
+#include "scheduler/scheduler_intf.h"
 #include "types.h"
 #include "timing/timing_poll_source.h"
 
@@ -11,7 +11,7 @@
 namespace Async {
     class TaskTimerSource {
         public:
-            TaskTimerSource(Scheduler::IJobScheduler& scheduler, TimingPollSource& timing_poll_source) : 
+            TaskTimerSource(Scheduler::IScheduler& scheduler, TimingPollSource& timing_poll_source) : 
                 scheduler(scheduler),
                 timing_poll_source(timing_poll_source) {}
 
@@ -20,7 +20,7 @@ namespace Async {
             auto after(std::chrono::milliseconds duration) -> Async::Task<Unit>;
 
         private:
-            Scheduler::IJobScheduler& scheduler;
+            Scheduler::IScheduler& scheduler;
             Async::TimingPollSource& timing_poll_source;
     };
 }

@@ -14,7 +14,7 @@ set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 20)
 set_property(TARGET timing_structures PROPERTY CXX_STANDARD 20)
 set_property(TARGET timing_structures PROPERTY LINKER_LANGUAGE CXX)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE job_scheduler concurrency)
+target_link_libraries(${PROJECT_NAME} PRIVATE scheduler concurrency)
 
 target_include_directories(${PROJECT_NAME} PUBLIC include)
 target_include_directories(timing_structures PUBLIC include)

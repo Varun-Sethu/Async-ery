@@ -1,4 +1,4 @@
-#include "job_scheduler/job_worker.h"
+#include "scheduler/worker.h"
 
 
 Scheduler::JobWorker::JobWorker(Context worker_context, StealWork steal_work) : worker_context(worker_context), steal_work(steal_work) {

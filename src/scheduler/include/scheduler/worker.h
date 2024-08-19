@@ -3,8 +3,8 @@
 #include <optional>
 #include <thread>
 
-#include "job_scheduler/job_queue.h"
-#include "job_scheduler/job.h"
+#include "scheduler/job_queue.h"
+#include "scheduler/job.h"
 
 namespace Scheduler {
     using StealWork = std::function<std::optional<Job>()>;

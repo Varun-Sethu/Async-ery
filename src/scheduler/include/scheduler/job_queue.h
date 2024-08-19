@@ -6,7 +6,7 @@
 #include <vector>
 
 #include "concurrency/spinlock.h"
-#include "job_scheduler/job.h"
+#include "scheduler/job.h"
 
 class JobQueue {
     public:

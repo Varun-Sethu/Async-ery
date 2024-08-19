@@ -4,7 +4,7 @@
 
 #include "async_lib/task.h"
 #include "cell/write_once_cell.h"
-#include "job_scheduler/job_scheduler_intf.h"
+#include "scheduler/scheduler_intf.h"
 
 namespace Async {
     // A TaskValueSource is a class that allows multiple tasks to be minted that are resolved
@@ -15,7 +15,7 @@ namespace Async {
     template <typename T>
     class TaskValueSource {
         public:
-            TaskValueSource(Scheduler::IJobScheduler& scheduler);
+            TaskValueSource(Scheduler::IScheduler& scheduler);
             
             auto complete(T value) -> void;
             auto complete(Scheduler::Context ctx, T value) -> void;
@@ -23,14 +23,14 @@ namespace Async {
             auto create() -> Async::Task<T>;
         private:
             std::shared_ptr<Cell::WriteOnceCell<T>> task_cell;
-            Scheduler::IJobScheduler& scheduler;
+            Scheduler::IScheduler& scheduler;
     };
 }
 
 
 // Implementation
 template <typename T>
-Async::TaskValueSource<T>::TaskValueSource(Scheduler::IJobScheduler& scheduler) : scheduler(scheduler) {
+Async::TaskValueSource<T>::TaskValueSource(Scheduler::IScheduler& scheduler) : scheduler(scheduler) {
     this->task_cell = std::make_shared<Cell::WriteOnceCell<T>>(scheduler);
 }
 

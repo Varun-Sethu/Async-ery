@@ -14,7 +14,7 @@ add_library(${PROJECT_NAME}
     src/${PROJECT_NAME}/task_io_source.cpp
 )
 
-target_link_libraries(${PROJECT_NAME} PUBLIC job_scheduler_intf cell io timing timing_structures concurrency)
+target_link_libraries(${PROJECT_NAME} PUBLIC scheduler_intf cell io timing timing_structures concurrency)
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 20)
 set_property(TARGET ${PROJECT_NAME} PROPERTY LINKER_LANGUAGE CXX)
@@ -32,7 +32,8 @@ add_compile_options(-Wall
                     -Wsuggest-override
                     -Wzero-as-null-pointer-constant
                     -fstack-protector-strong
-                    -fanalyzer)
+                    #-fanalyzer
+                    )
 
 target_include_directories(${PROJECT_NAME} PUBLIC include)
 target_include_directories(${PROJECT_NAME} PRIVATE src/${PROJECT_NAME})
@@ -53,7 +54,7 @@ set_property(TARGET stress_test PROPERTY CXX_STANDARD 20)
 
 
 
-target_link_libraries(queue_test PRIVATE job_scheduler)
+target_link_libraries(queue_test PRIVATE scheduler)
 target_link_libraries(io_test PRIVATE async_lib)
 target_link_libraries(timing_test PRIVATE timing_structures)
 target_link_libraries(main PRIVATE async_lib)

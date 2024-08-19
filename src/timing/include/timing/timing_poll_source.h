@@ -2,8 +2,8 @@
 
 #include "timing/structures/timing_wheel_hierarchical.h"
 #include "concurrency/spinlock.h"
-#include "job_scheduler/poll_source.h"
-#include "job_scheduler/job.h"
+#include "scheduler/poll_source.h"
+#include "scheduler/job.h"
 
 namespace Async {
     class TimingPollSource : public Scheduler::IPollSource {

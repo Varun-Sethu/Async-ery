@@ -8,21 +8,19 @@
 #include <stop_token>
 
 #include "timing/structures/timing_wheel.h"
-#include "job_scheduler/job_scheduler.h"
+#include "scheduler/scheduler.h"
 
 using std::chrono_literals::operator""ms, std::chrono_literals::operator""min;
-using namespace Scheduler;
 
-
-JobScheduler::JobScheduler(int n_workers, PollSources poll_sources) : worker_pool(n_workers) {
+Scheduler::Scheduler::Scheduler(int n_workers, PollSources poll_sources) : worker_pool(n_workers) {
     this->poll_thread = std::jthread([this, poll_sources](auto stop) {
         this->begin_poll(stop, poll_sources);
     });
 }
 
 
-auto JobScheduler::queue(Context ctx, Job job_fn) -> void { queue(ctx, std::vector<Job> { job_fn }); }
-auto JobScheduler::queue(Context ctx, std::vector<Job> jobs) -> void {
+auto Scheduler::Scheduler::queue(Context ctx, Job job_fn) -> void { queue(ctx, std::vector<Job> { job_fn }); }
+auto Scheduler::Scheduler::queue(Context ctx, std::vector<Job> jobs) -> void {
     this->worker_pool.queue(ctx, jobs);
 }
 
@@ -31,7 +29,7 @@ auto JobScheduler::queue(Context ctx, std::vector<Job> jobs) -> void {
 // each poll source has a defined poll frequency, poll sources provide poll frequencies so that they can limit the amount of contention
 // over resources they may be polling over (imagine a timer poll), the function will keep polling until the stop token is triggered
 // after a poll job is complete it will then schedule it n-seconds in the future based on the poll frequency
-auto JobScheduler::begin_poll(std::stop_token stop_token, PollSources poll_sources) -> void {
+auto Scheduler::Scheduler::begin_poll(std::stop_token stop_token, PollSources poll_sources) -> void {
     auto poll_scheduler = TimingWheel<PollSource>(
         /* wheel_tick_size = */ 10ms,
         /* wheel_size = */ 1min / 10ms);
