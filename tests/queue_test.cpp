@@ -1,18 +1,18 @@
 #include <map>
 #include <iostream>
 
-#include "job_scheduler/circular_queue.h"
+#include "job_scheduler/job_queue.h"
 #include "job_scheduler/job_scheduler.h"
 #include "job_scheduler/scheduling_context.h"
 
 auto main() -> int {
-    auto queue = CircularQueue(4);
+    auto queue = JobQueue(4);
     auto job_id = 0;
     auto job_results = std::map<int, bool>();
     auto scheduler = Scheduler::JobScheduler(0, {});
 
 
-    std::srand(std::time(nullptr));
+    std::srand(static_cast<unsigned int>(std::time(nullptr)));
 
     auto get_job_id = [&job_id, &job_results]() -> int {
         job_results[job_id] = false;

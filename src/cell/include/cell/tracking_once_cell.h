@@ -33,7 +33,7 @@ namespace Cell {
             // block sleeps the current thread until the value of the cell is available
             // it then returns the value of the cell, note that this is different from await
             // as await registers a continuation, while block is a blocking operation
-            auto block() -> T;
+            auto block() -> T override;
 
         private:
             // A note on callbacks:

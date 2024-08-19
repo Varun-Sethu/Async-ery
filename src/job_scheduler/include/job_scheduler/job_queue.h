@@ -8,15 +8,16 @@
 #include "concurrency/spinlock.h"
 #include "job_scheduler/job.h"
 
-class CircularQueue {
+class JobQueue {
     public:
-        CircularQueue(int base_size) : queue(base_size) {}
+        JobQueue(int base_size) : queue(base_size) {}
+        JobQueue() : JobQueue(1024) {}
         
-        ~CircularQueue() = default;
-        CircularQueue(CircularQueue&& other) : queue(std::move(other.queue)), head(other.head), tail(other.tail) {}
-        CircularQueue(CircularQueue& other) = delete;
-        auto operator=(CircularQueue& other) -> CircularQueue& = delete;
-        auto operator=(CircularQueue&& other) -> CircularQueue& {
+        ~JobQueue() = default;
+        JobQueue(JobQueue&& other) : queue(std::move(other.queue)), head(other.head), tail(other.tail) {}
+        JobQueue(JobQueue& other) = delete;
+        auto operator=(JobQueue& other) -> JobQueue& = delete;
+        auto operator=(JobQueue&& other) -> JobQueue& {
             queue = std::move(other.queue);
             head = other.head;
             tail = other.tail;

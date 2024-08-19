@@ -15,17 +15,17 @@ using namespace Scheduler;
 
 
 JobScheduler::JobScheduler(int n_workers, PollSources poll_sources) : job_queue(1024) {
-    auto queues = std::views::iota(0, n_workers) | std::views::transform([](auto id) { return CircularQueue(1024); });
-    this->worker_queues = std::vector<CircularQueue>(
-        std::move_iterator(queues.begin()),
-        std::move_iterator(queues.end()));
+    this->worker_queues = std::vector<JobQueue>(n_workers);
+    this->worker_threads = std::vector<std::jthread>(n_workers);
+    this->poll_thread = std::jthread([this, poll_sources](auto stop) {
+        this->begin_poll(stop, poll_sources);
+    });
 
-    auto workers = std::views::iota(0, n_workers)
-            | std::views::transform([this](auto id) { return [this, id](auto stop) { this->begin_worker(id, stop); }; })
-            | std::views::transform([](auto worker) { return std::jthread(worker); });
-
-    this->worker_threads = std::vector<std::jthread>(workers.begin(), workers.end());
-    this->poll_thread = std::jthread([this, poll_sources](auto stop) { this->begin_poll(stop, poll_sources); });
+    for (auto i = 0; i < n_workers; i++) {
+        worker_threads[i] = std::jthread([this, i](auto stop) {
+            this->begin_worker(i, stop);
+        });
+    }
 }
 
 
@@ -65,22 +65,22 @@ auto JobScheduler::begin_poll(std::stop_token stop_token, PollSources poll_sourc
 // it will first check the worker's queue, then the global queue, and finally evict a job from another worker
 // queue
 auto JobScheduler::next_worker_job(int worker_id) -> std::optional<Job> {
-    if (auto job = worker_queues[worker_id].dequeue(); job.has_value()) { return job; }
+    if (auto job = worker_queues[worker_id].dequeue(); job.has_value()) {
+        return job;
+    }
 
-    // check the global queue for any jobs, we do this "naively" by first testing for a job
-    // using the size (this maintains a relaxed memory order) and if one exists then acquiring it
-    auto job_from_global_queue = job_queue.size() > 0 
-                                    ? job_queue.dequeue() 
-                                    : std::nullopt;
-    
-    if (job_from_global_queue.has_value()) { return job_from_global_queue; }
+    // check the global queue for any jobs
+    auto job_from_global_queue = job_queue.dequeue();
+    if (job_from_global_queue.has_value()) {
+        return job_from_global_queue;
+    }
 
     // we must now evict a job from another worker queue, we do this by iterating from our 
     // current worker id until we wrap around, we do this "approximately" skipping if we
     // see no jobs
     for (auto i = worker_id + 1; i != worker_id; i = (i + 1) % worker_queues.size()) {
-        if (worker_queues[i].size() == 0) { continue; }
-        if (auto job = worker_queues[i].dequeue(); job.has_value()) {
+        if (worker_queues[i % worker_queues.size()].size() == 0) { continue; }
+        if (auto job = worker_queues[i % worker_queues.size()].dequeue(); job.has_value()) {
             return job;
         }
     }
@@ -96,8 +96,9 @@ auto JobScheduler::begin_worker(int worker_id, std::stop_token stop_token) -> vo
     while (!stop_token.stop_requested()) {
         auto job = next_worker_job(worker_id);
 
-        if (!job.has_value()) { std::this_thread::yield(); }
-        else {
+        if (!job.has_value()) {
+            std::this_thread::yield();
+        } else {
             job.value()(context_for_worker);
         }
     }

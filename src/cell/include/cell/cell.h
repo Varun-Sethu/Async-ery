@@ -16,6 +16,8 @@ namespace Cell {
     template <typename T>
     class ICell {
         public:
+            virtual ~ICell() = default;
+
             virtual auto read() const -> std::optional<T> = 0;
             virtual auto await(Callback<T> callback) -> void = 0;
             virtual auto block() -> T = 0;

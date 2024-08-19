@@ -13,7 +13,9 @@
 namespace Scheduler {
     class IPollSource {
     public:
-        virtual auto poll_frequency() -> std::chrono::milliseconds = 0;
+        virtual ~IPollSource() = default;
+
+        [[nodiscard]] virtual auto poll_frequency() -> std::chrono::milliseconds = 0;
         [[nodiscard]] virtual auto poll() -> std::vector<Job> = 0;
     };
 }

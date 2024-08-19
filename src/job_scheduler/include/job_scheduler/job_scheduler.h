@@ -4,7 +4,7 @@
 #include <thread>
 #include <optional>
 
-#include "job_scheduler/circular_queue.h"
+#include "job_scheduler/job_queue.h"
 #include "job_scheduler/job_scheduler_intf.h"
 #include "job_scheduler/scheduling_context.h"
 #include "job_scheduler/poll_source.h"
@@ -17,7 +17,7 @@ namespace Scheduler {
 
 
         JobScheduler(int n_workers, PollSources poll_sources);            
-        auto queue(Context ctx, Job job_fn) -> void;
+        auto queue(Context ctx, Job job_fn) -> void override;
 
     private:
         // begin_poll will initiate the polling of all poll sources, this is done one a separate
@@ -31,8 +31,8 @@ namespace Scheduler {
 
         // TODO: make worker its own class
 
-        CircularQueue job_queue;
-        std::vector<CircularQueue> worker_queues;
+        JobQueue job_queue;
+        std::vector<JobQueue> worker_queues;
         std::vector<std::jthread> worker_threads;
         std::jthread poll_thread;
     };

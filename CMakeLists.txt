@@ -18,7 +18,21 @@ target_link_libraries(${PROJECT_NAME} PUBLIC job_scheduler_intf cell io timing t
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 20)
 set_property(TARGET ${PROJECT_NAME} PROPERTY LINKER_LANGUAGE CXX)
-add_compile_options(-Wall -Wextra -pedantic -Werror)
+set(CMAKE_BUILD_TYPE Debug)
+add_compile_options(-Wall 
+                    -Wextra
+                    -pedantic-errors
+                    -Wnon-virtual-dtor
+                    -Werror
+                    -Wconversion
+                    -Wdouble-promotion
+                    -Wnull-dereference
+                    -Wcast-align
+                    -Wuninitialized
+                    -Wsuggest-override
+                    -Wzero-as-null-pointer-constant
+                    -fstack-protector-strong
+                    -fanalyzer)
 
 target_include_directories(${PROJECT_NAME} PUBLIC include)
 target_include_directories(${PROJECT_NAME} PRIVATE src/${PROJECT_NAME})

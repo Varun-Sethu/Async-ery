@@ -10,6 +10,7 @@
 namespace Scheduler {
     class IJobScheduler {
     public:
+        virtual ~IJobScheduler() = default;
         auto virtual queue(Context ctx, Job job_fn) -> void = 0;
     };
 }

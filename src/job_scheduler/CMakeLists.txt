@@ -2,10 +2,10 @@ project(job_scheduler)
 
 # Actual target
 add_library(${PROJECT_NAME}
-    include/${PROJECT_NAME}/circular_queue.h
+    include/${PROJECT_NAME}/job_queue.h
     include/${PROJECT_NAME}/job_scheduler.h
     src/job_scheduler.cpp
-    src/circular_queue.cpp
+    src/job_queue.cpp
 )
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 20)

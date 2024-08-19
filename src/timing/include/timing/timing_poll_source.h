@@ -11,7 +11,7 @@ namespace Async {
             TimingPollSource();
 
             auto schedule(std::chrono::milliseconds expiry, Scheduler::Job task) -> void;
-            auto poll_frequency() -> std::chrono::milliseconds;
+            auto poll_frequency() -> std::chrono::milliseconds override;
             auto poll() -> std::vector<Scheduler::Job> override;
 
         private:
