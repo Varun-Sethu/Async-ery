@@ -10,6 +10,7 @@ namespace Scheduler {
     class Context {
     public:
         friend class JobScheduler;
+        friend class WorkerPool;
 
         [[nodiscard]] static auto empty() -> Context { return Context(); }
 

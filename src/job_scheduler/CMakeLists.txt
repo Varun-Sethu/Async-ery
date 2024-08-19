@@ -4,8 +4,12 @@ project(job_scheduler)
 add_library(${PROJECT_NAME}
     include/${PROJECT_NAME}/job_queue.h
     include/${PROJECT_NAME}/job_scheduler.h
+    include/${PROJECT_NAME}/job_worker.h
+    include/${PROJECT_NAME}/worker_pool.h
     src/job_scheduler.cpp
     src/job_queue.cpp
+    src/job_worker.cpp
+    src/worker_pool.cpp
 )
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 20)
