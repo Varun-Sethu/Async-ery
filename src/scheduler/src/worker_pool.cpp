@@ -28,8 +28,6 @@ auto Scheduler::WorkerPool::queue(Context ctx, std::vector<Job> jobs) -> void {
 
 
 auto Scheduler::WorkerPool::find_new_work() -> std::optional<Job> {
-    using namespace std::views; 
-
     // check the global queue for any jobs
     if (auto job = global_queue.dequeue(); job.has_value()) {
         return job;
