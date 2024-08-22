@@ -3,7 +3,7 @@
 #include <mutex>
 
 #include "task_value_source.h"
-#include "scheduler/scheduler.h"
+#include "scheduler/scheduler_intf.h"
 #include "types.h"
 #include "timing/timing_poll_source.h"
 
@@ -11,7 +11,7 @@
 namespace Async {
     class TaskTimerSource {
         public:
-            TaskTimerSource(Async::Scheduler& scheduler, TimingPollSource& timing_poll_source) : 
+            TaskTimerSource(Scheduler::IScheduler& scheduler, TimingPollSource& timing_poll_source) : 
                 scheduler(scheduler),
                 timing_poll_source(timing_poll_source) {}
 
@@ -20,7 +20,14 @@ namespace Async {
             auto after(std::chrono::milliseconds duration) -> Async::Task<Unit>;
 
         private:
-            Async::Scheduler& scheduler;
-            Async::TimingPollSource& timing_poll_source;
+            // Note:
+            //      It is expected that the lifetime of the scheduler is longer than the lifetime of the TaskTimerSource
+            //      the scheduler's lifetime should match the entire application lifetime.
+            //
+            //      It is expected that the lifetime of the timing_poll_source is longer than the lifetime of the TaskTimerSource
+            //      the timing_poll_source's lifetime should match the entire application lifetime. This is trivially true as
+            //      the timing_poll_source is captured via shared ownership by the scheduler, hence its lifetime is the same
+            std::reference_wrapper<Scheduler::IScheduler> scheduler;
+            std::reference_wrapper<Async::TimingPollSource> timing_poll_source;
     };
 }

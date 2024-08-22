@@ -18,4 +18,4 @@ namespace Async {
 
     template <typename T>
     using Result = std::variant<Resolved<T>, Status>;
-};
+}

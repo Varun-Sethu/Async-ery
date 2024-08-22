@@ -14,23 +14,37 @@ add_library(${PROJECT_NAME}
     src/${PROJECT_NAME}/task_io_source.cpp
 )
 
-target_link_libraries(${PROJECT_NAME} PUBLIC scheduler cell io timing timing_structures concurrency)
+target_link_libraries(${PROJECT_NAME} PUBLIC scheduler_intf cell io timing timing_structures concurrency)
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 20)
 set_property(TARGET ${PROJECT_NAME} PROPERTY LINKER_LANGUAGE CXX)
+
+set(CMAKE_CXX_CLANG_TIDY clang-tidy-17 "-config-file=${CMAKE_SOURCE_DIR}/.clang-tidy")
+add_compile_options(-Wall 
+                    -Wextra
+                    -pedantic-errors
+                    -Wnon-virtual-dtor
+                    -Werror
+                    -Wconversion
+                    -Wdouble-promotion
+                    -Wnull-dereference
+                    -Wcast-align
+                    -Wuninitialized
+                    -Wsuggest-override
+                    -Wzero-as-null-pointer-constant
+                    -fstack-protector-strong)
+
 
 target_include_directories(${PROJECT_NAME} PUBLIC include)
 target_include_directories(${PROJECT_NAME} PRIVATE src/${PROJECT_NAME})
 
 
 # ==== For testing ====
-add_executable(queue_test tests/queue_test.cpp)
 add_executable(io_test tests/io_test.cpp)
 add_executable(timing_test tests/timing_test.cpp)
 add_executable(main tests/main.cpp)
 add_executable(stress_test tests/stress.cpp)
 
-set_property(TARGET queue_test PROPERTY CXX_STANDARD 20)
 set_property(TARGET io_test PROPERTY CXX_STANDARD 20)
 set_property(TARGET timing_test PROPERTY CXX_STANDARD 20)
 set_property(TARGET main PROPERTY CXX_STANDARD 20)
@@ -38,7 +52,6 @@ set_property(TARGET stress_test PROPERTY CXX_STANDARD 20)
 
 
 
-target_link_libraries(queue_test PRIVATE scheduler)
 target_link_libraries(io_test PRIVATE async_lib)
 target_link_libraries(timing_test PRIVATE timing_structures)
 target_link_libraries(main PRIVATE async_lib)

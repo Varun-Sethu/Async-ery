@@ -1,3 +1,7 @@
+// NOLINTBEGIN
+//  Note: this is just a test file to demonstrate how to use the library
+//        and is not a part of the library itself.
+
 #include <iostream>
 #include <chrono>
 #include <ostream>
@@ -58,4 +62,7 @@ auto main() -> int {
     }
 
     return 0;
-};
+}
+
+
+// NOLINTEND

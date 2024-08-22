@@ -1,9 +1,12 @@
 project(io)
 
+# TODO: Integrate clang-tidy into the build
+
 add_library(${PROJECT_NAME}
     include/${PROJECT_NAME}/aio.h
     include/${PROJECT_NAME}/io_poll_source.h
     include/${PROJECT_NAME}/io_request.h
+    include/${PROJECT_NAME}/types.h
     src/aio.cpp
     src/io_poll_source.cpp
     src/io_request.cpp
@@ -13,7 +16,7 @@ set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 20)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE 
     concurrency
-    scheduler
+    scheduler_intf
     pthread
     rt
 )

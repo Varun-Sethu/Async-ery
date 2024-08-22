@@ -1,21 +1,28 @@
 #pragma once
 
 #include "async_lib/task_value_source.h"
-#include "scheduler/scheduler.h"
+#include "scheduler/scheduler_intf.h"
 #include "io/io_poll_source.h"
 
 namespace Async {
     class TaskIOSource {
         public:
-            TaskIOSource(Async::Scheduler& scheduler, Async::IOPollSource& io_poll_source) : 
+            TaskIOSource(Scheduler::IScheduler& scheduler, Async::IOPollSource& io_poll_source) : 
                 scheduler(scheduler),
                 io_poll_source(io_poll_source) {}
 
 
-            auto read(FILE* fp, Async::IOReadRequest request) -> Async::Task<Async::IOReadRequest>;
+            auto read(FILE* file, Async::IOReadRequest request) -> Async::Task<Async::IOReadRequest>;
 
         private:
-            Async::Scheduler& scheduler;
-            Async::IOPollSource& io_poll_source;
+            // Note:
+            //      It is expected that the lifetime of the scheduler is longer than the lifetime of the TaskIOSource
+            //      the scheduler's lifetime should match the entire application lifetime.
+            //
+            //      It is expected that the lifetime of the io_poll_source is longer than the lifetime of the TaskIOSource
+            //      the io_poll_source's lifetime should match the entire application lifetime. This is trivially true as
+            //      the io_poll_source is captured via shared ownership by the scheduler, hence its lifetime is the same
+            std::reference_wrapper<Scheduler::IScheduler> scheduler;
+            std::reference_wrapper<Async::IOPollSource> io_poll_source;
     };
 }

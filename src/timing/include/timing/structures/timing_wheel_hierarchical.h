@@ -77,7 +77,7 @@ HierarchicalTimingWheel<Timer>::HierarchicalTimingWheel(std::chrono::millisecond
 
 template <typename Timer>
 auto HierarchicalTimingWheel<Timer>::schedule(std::chrono::milliseconds duration_from_last_advancement, Timer&& timer) -> void {
-    auto ticks_to_fit = duration_from_last_advancement / tick_size;
+    auto ticks_to_fit = static_cast<size_t>(duration_from_last_advancement / tick_size);
 
     auto [wheel_to_place_in, ticks_left] = determine_timer_wheel(ticks_to_fit);
     auto& [num_buckets, ticks_per_bucket, curr_bucket_index, buckets] = wheels[wheel_to_place_in];
@@ -90,21 +90,21 @@ auto HierarchicalTimingWheel<Timer>::schedule(std::chrono::milliseconds duration
 
 template <typename Timer>
 auto HierarchicalTimingWheel<Timer>::advance() -> std::vector<Timer> {
-auto now = std::chrono::system_clock::now();
+    auto now = std::chrono::system_clock::now();
     if (now - last_advancement_time < tick_size) { return std::vector<Timer>(); }
             
     auto resolved_timers = std::vector<Timer>();
     auto& [lowest_wheel_size, _, lowest_wheel_bucket_index, lowest_wheel] = wheels[0];
     auto completed_buckets = std::views::iota(lowest_wheel_bucket_index, determine_new_bottom_wheel_index(now))
-                           | std::views::transform([lowest_wheel_size](auto i) { return i % lowest_wheel_size; });
+                           | std::views::transform([lowest_wheel_size=lowest_wheel_size](auto bucket) { return bucket % lowest_wheel_size; });
 
     // keep reading all the timers from each bucket until we reach the current time
-    for (auto i : completed_buckets) {
-        for (auto& [_, timer] : lowest_wheel[i]) { resolved_timers.push_back(std::move(timer)); }
+    for (auto bucket : completed_buckets) {
+        for (auto& [_, timer] : lowest_wheel[bucket]) { resolved_timers.push_back(std::move(timer)); }
 
         // clear this bucket and advance the current bucket index
         // to the next bucket, if we've wrapped around to 0 we need to load all events from the wheel above us
-        lowest_wheel[i].clear();
+        lowest_wheel[bucket].clear();
         lowest_wheel_bucket_index = (lowest_wheel_bucket_index + 1) % lowest_wheel_size;
         if (lowest_wheel_bucket_index == 0) { load_timers_from_wheel(/* wheel_num = */ 1); }
     }
@@ -177,7 +177,7 @@ auto HierarchicalTimingWheel<Timer>::determine_timer_wheel(size_t ticks_since_la
 
 template <typename Timer>
 auto inline HierarchicalTimingWheel<Timer>::determine_new_bottom_wheel_index(std::chrono::system_clock::time_point now) -> size_t {
-    auto& [_, __, lowest_wheel_bucket_index, ___] = wheels[0];
-    auto bucket_index = lowest_wheel_bucket_index + ((now - last_advancement_time) / tick_size);
+    auto& lowest_wheel_bucket_index = wheels[0].curr_bucket_index;
+    auto bucket_index = lowest_wheel_bucket_index + static_cast<size_t>((now - last_advancement_time) / tick_size);
     return bucket_index;
 }
