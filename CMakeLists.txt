@@ -22,7 +22,7 @@ set_property(TARGET ${PROJECT_NAME} PROPERTY LINKER_LANGUAGE CXX)
 set(CMAKE_BUILD_TYPE Debug)
 set(EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_CLANG_TIDY 
-        clang-tidy;
+        clang-tidy-17;
             -header-filter=.*;
             -checks=*,-abseil-*,-altera-*,-android-*,-fuchsia-*,-google-*,-llvm*,readability-*,clang-analyzer-*,-clang-analyzer-optin.performance.Padding,-misc-no-recursion;
             -warnings-as-errors=*)
