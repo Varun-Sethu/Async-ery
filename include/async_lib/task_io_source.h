@@ -15,17 +15,14 @@ namespace Async {
             auto read(FILE* file, Async::IOReadRequest request) -> Async::Task<Async::IOReadRequest>;
 
         private:
-            // NOLINTBEGIN(cppcoreguidelines-avoid-const-or-ref-data-members)
-            //  Note: it is an invariant of the Asynchronous library that the scheduler's
-            //        lifetime is longer than the lifetime of any task / cell that uses it.
-            //        in the application scope it has a 'static lifetime
-            Scheduler::IScheduler& scheduler;
-            // NOLINTEND(cppcoreguidelines-avoid-const-or-ref-data-members)
-
-            // NOLINTBEGIN(cppcoreguidelines-avoid-const-or-ref-data-members)
-            //  Note: it is an invariant of the Asynchronous library that the io_poll_source's
-            //        lifetime is longer than TaskIOSource's lifetime
-            Async::IOPollSource& io_poll_source;
-            // NOLINTEND(cppcoreguidelines-avoid-const-or-ref-data-members)
+            // Note:
+            //      It is expected that the lifetime of the scheduler is longer than the lifetime of the TaskIOSource
+            //      the scheduler's lifetime should match the entire application lifetime.
+            //
+            //      It is expected that the lifetime of the io_poll_source is longer than the lifetime of the TaskIOSource
+            //      the io_poll_source's lifetime should match the entire application lifetime. This is trivially true as
+            //      the io_poll_source is captured via shared ownership by the scheduler, hence its lifetime is the same
+            std::reference_wrapper<Scheduler::IScheduler> scheduler;
+            std::reference_wrapper<Async::IOPollSource> io_poll_source;
     };
 }

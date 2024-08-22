@@ -8,6 +8,6 @@ auto Async::TaskIOSource::read(FILE* file, Async::IOReadRequest request) -> Asyn
         task_source.complete(buffer);
     };
 
-    io_poll_source.queue_read(file, request, read_callback);
+    io_poll_source.get().queue_read(file, request, read_callback);
     return task;
 }

@@ -45,11 +45,9 @@ namespace Cell {
             std::vector<Callback<T>> callbacks;
             std::condition_variable_any cell_filled;
 
-            // NOLINTBEGIN(cppcoreguidelines-avoid-const-or-ref-data-members)
             //  Note: it is an invariant of the Asynchronous library that the scheduler's
             //        is of 'static lifetime and hence will outlive any cell that uses it
-            Scheduler::IScheduler& scheduler;
-            // NOLINTEND(cppcoreguidelines-avoid-const-or-ref-data-members)
+            std::reference_wrapper<Scheduler::IScheduler> scheduler;
     };
 }
 
@@ -80,7 +78,7 @@ auto Cell::WriteOnceCell<T>::write(Scheduler::Context ctx, T write_val) -> bool 
         // alert callbacks by scheduling continuations
         // on the scheduler
         for (auto& callback : callbacks) {
-            scheduler.queue(ctx, [=] (auto ctx) { callback(ctx, write_val); });
+            scheduler.get().queue(ctx, [=] (auto ctx) { callback(ctx, write_val); });
         }
 
         // clear the callbacks to release any reference we may indirectly maintain
@@ -102,7 +100,7 @@ auto Cell::WriteOnceCell<T>::await(Callback<T> callback) -> void {
     const std::shared_lock lock(mutex);
     if (value.has_value()) {
         auto value_inner = value.value();
-        scheduler.queue(Scheduler::Context::empty(),
+        scheduler.get().queue(Scheduler::Context::empty(),
                         [callback, value_inner] (auto ctx) { callback(ctx, value_inner); });
         return;
     }

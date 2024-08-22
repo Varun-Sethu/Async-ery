@@ -56,12 +56,10 @@ namespace Async {
         
         private:
             std::shared_ptr<Cell::ICell<T>> cell;
-            // NOLINTBEGIN(cppcoreguidelines-avoid-const-or-ref-data-members)
             //  Note: it is an invariant of the Asynchronous library that the scheduler's
             //        lifetime is longer than the lifetime of any task / cell that uses it.
             //        in the application scope it has a 'static lifetime
-            Scheduler::IScheduler& scheduler;
-            // NOLINTEND(cppcoreguidelines-avoid-const-or-ref-data-members)
+            std::reference_wrapper<Scheduler::IScheduler> scheduler;
     };
 }
 
