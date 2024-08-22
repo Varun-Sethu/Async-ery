@@ -1,0 +1,5 @@
+---
+Checks:             '*,-abseil-*,-altera-*,-android-*,-fuchsia-*,-google-*,-llvm*,readability-*,clang-analyzer-*,-clang-analyzer-optin.performance.Padding,-misc-no-recursion'
+WarningsAsErrors:   true
+HeaderFilterRegex:  '.*'
+...

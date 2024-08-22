@@ -19,14 +19,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC scheduler_intf cell io timing timin
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 20)
 set_property(TARGET ${PROJECT_NAME} PROPERTY LINKER_LANGUAGE CXX)
 
-set(CMAKE_BUILD_TYPE Debug)
-set(EXPORT_COMPILE_COMMANDS ON)
-set(CMAKE_CXX_CLANG_TIDY 
-        clang-tidy-17;
-            -header-filter=.*;
-            -checks=*,-abseil-*,-altera-*,-android-*,-fuchsia-*,-google-*,-llvm*,readability-*,clang-analyzer-*,-clang-analyzer-optin.performance.Padding,-misc-no-recursion;
-            -warnings-as-errors=*)
-
+set(CMAKE_CXX_CLANG_TIDY clang-tidy-17 "-config-file=${CMAKE_SOURCE_DIR}/.clang-tidy")
 add_compile_options(-Wall 
                     -Wextra
                     -pedantic-errors
