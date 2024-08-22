@@ -45,4 +45,4 @@ template <typename T>
 auto Async::TaskValueSource<T>::complete(Scheduler::Context ctx, T value) -> void { this->task_cell->write(ctx, value); }
 
 template <typename T>
-auto Async::TaskValueSource<T>::create() -> Async::Task<T> { return Async::Task<T>(this->scheduler, this->task_cell); }
+auto Async::TaskValueSource<T>::create() -> Async::Task<T> { return Async::Task<T>(this->scheduler.get(), this->task_cell); }
