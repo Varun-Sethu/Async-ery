@@ -73,7 +73,7 @@ template <typename T>
 Async::Task<T>::Task(Scheduler::IScheduler& scheduler, std::function<T(void)> func) : scheduler(scheduler) {
     auto cell = std::make_shared<Cell::WriteOnceCell<T>>(scheduler);
     this->cell = cell;
-    this->scheduler.queue(Scheduler::Context::empty(), [cell, func](auto ctx) {
+    this->scheduler.get().queue(Scheduler::Context::empty(), [cell, func](auto ctx) {
         auto result = func();
         cell->write(ctx, result);
     });
