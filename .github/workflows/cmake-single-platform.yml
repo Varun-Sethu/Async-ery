@@ -21,6 +21,13 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+    - name: Install LLVM 17
+      run: |
+          wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
+          sudo apt-add-repository "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-17 main"
+          sudo apt update
+          sudo apt install llvm-17 llvm-17-dev llvm-17-tools clang-17 clang-tidy-17 clang-tools-17 \
+            libclang-17-dev
 
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
