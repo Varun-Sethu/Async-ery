@@ -15,7 +15,7 @@ namespace Async {
     template <typename T>
     class TaskValueSource {
         public:
-            TaskValueSource(Scheduler::IScheduler& scheduler);
+            explicit TaskValueSource(Scheduler::IScheduler& scheduler);
             
             auto complete(T value) -> void;
             auto complete(Scheduler::Context ctx, T value) -> void;
@@ -23,7 +23,12 @@ namespace Async {
             auto create() -> Async::Task<T>;
         private:
             std::shared_ptr<Cell::WriteOnceCell<T>> task_cell;
+            // NOLINTBEGIN(cppcoreguidelines-avoid-const-or-ref-data-members)
+            //  Note: it is an invariant of the Asynchronous library that the scheduler's
+            //        lifetime is longer than the lifetime of any task / cell that uses it.
+            //        in the application scope it has a 'static lifetime
             Scheduler::IScheduler& scheduler;
+            // NOLINTEND(cppcoreguidelines-avoid-const-or-ref-data-members)
     };
 }
 

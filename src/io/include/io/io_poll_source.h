@@ -23,7 +23,7 @@ namespace Async {
         public:
             auto poll_frequency() -> std::chrono::milliseconds override { return 5ms; };
             auto poll() -> std::vector<Scheduler::Job> override;
-            auto queue_read(FILE* fp, Async::IOReadRequest request, Callback callback) -> void;
+            auto queue_read(FILE* file, Async::IOReadRequest request, Callback callback) -> void;
 
         private:
             SpinLock spinlock;

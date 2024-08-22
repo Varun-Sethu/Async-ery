@@ -17,9 +17,16 @@ namespace Cell {
     class ICell {
         public:
             virtual ~ICell() = default;
-
-            virtual auto read() const -> std::optional<T> = 0;
+            [[nodiscard]] virtual auto read() const -> std::optional<T> = 0;
             virtual auto await(Callback<T> callback) -> void = 0;
             virtual auto block() -> T = 0;
+
+
+            ICell() = default;
+            ICell(ICell&&) = delete;
+            ICell(const ICell&) = delete;
+
+            auto operator=(const ICell&) -> ICell& = delete;
+            auto operator=(ICell&&) -> ICell& = delete;
     };
 }

@@ -1,3 +1,7 @@
+// NOLINTBEGIN
+//  Note: this is just a test file to demonstrate how to use the library
+//        and is not a part of the library itself.
+
 #include <iostream>
 #include <variant>
 #include <thread>
@@ -20,7 +24,7 @@ auto main() -> int {
 
     for (int j = 0; j < 1000; j++) {
         auto offset = j * 100ms;
-        timing_source.after(1000ms + offset).map<int>([j, &counter](__attribute__((unused)) auto _) {
+        timing_source.after(1000ms + offset).map<int>([&counter](__attribute__((unused)) auto _) {
             counter.fetch_add(1);
             return 0;
         });
@@ -31,3 +35,5 @@ auto main() -> int {
 
     return 0;
 }
+
+// NOLINTEND

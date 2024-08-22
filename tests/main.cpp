@@ -1,6 +1,8 @@
+// NOLINTBEGIN
+//  Note: this is just a test file to demonstrate how to use the library
+//        and is not a part of the library itself.
+
 #include <iostream>
-#include <variant>
-#include <thread>
 #include <vector>
 #include <chrono>
 
@@ -61,3 +63,5 @@ auto main() -> int {
     }
     std::cout << std::endl;
 }
+
+// NOLINTEND

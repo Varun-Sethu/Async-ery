@@ -10,7 +10,7 @@
 
 class JobQueue {
     public:
-        JobQueue(int base_size) : queue(base_size) {}
+        JobQueue(size_t base_size) : queue(base_size) {}
         JobQueue() : JobQueue(1024) {}
         
         ~JobQueue() = default;

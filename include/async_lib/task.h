@@ -24,17 +24,17 @@ namespace Async {
     class Task {
         template <typename Q> friend class Task;
         friend class TaskValueSource<T>;   // for exposing private Task constructor that takes a cell
-
+        
         public:
-            Task(Scheduler::IScheduler& scheduler, std::function<T(void)> f);
+            Task(Scheduler::IScheduler& scheduler, std::function<T(void)> func);
 
             
             template <typename G>
-            auto bind(std::function<Task<G>(T)> f) -> Task<G>;
+            auto bind(std::function<Task<G>(T)> func) -> Task<G>;
 
 
             template <typename G>
-            auto map(std::function<G(T)> f) -> Task<G>;
+            auto map(std::function<G(T)> func) -> Task<G>;
 
             // block will pause the current thread until the value of the cell is available
             // it will then return the value of the cell.
@@ -52,11 +52,16 @@ namespace Async {
             // ICell are an implementation detail so creation of Tasks from them is restricted
             // to be exclusively a private constructor
             Task(Scheduler::IScheduler& scheduler, std::shared_ptr<Cell::ICell<T>> cell) : 
-                cell(cell), scheduler(scheduler) {}
+                cell(std::move(cell)), scheduler(scheduler) {}
         
         private:
             std::shared_ptr<Cell::ICell<T>> cell;
+            // NOLINTBEGIN(cppcoreguidelines-avoid-const-or-ref-data-members)
+            //  Note: it is an invariant of the Asynchronous library that the scheduler's
+            //        lifetime is longer than the lifetime of any task / cell that uses it.
+            //        in the application scope it has a 'static lifetime
             Scheduler::IScheduler& scheduler;
+            // NOLINTEND(cppcoreguidelines-avoid-const-or-ref-data-members)
     };
 }
 
@@ -67,11 +72,11 @@ namespace Async {
 
 // Implementation
 template <typename T>
-Async::Task<T>::Task(Scheduler::IScheduler& scheduler, std::function<T(void)> f) : scheduler(scheduler) {
+Async::Task<T>::Task(Scheduler::IScheduler& scheduler, std::function<T(void)> func) : scheduler(scheduler) {
     auto cell = std::make_shared<Cell::WriteOnceCell<T>>(scheduler);
     this->cell = cell;
-    this->scheduler.queue(Scheduler::Context::empty(), [cell, f](auto ctx) {
-        auto result = f();
+    this->scheduler.queue(Scheduler::Context::empty(), [cell, func](auto ctx) {
+        auto result = func();
         cell->write(ctx, result);
     });
 }
@@ -95,10 +100,10 @@ Async::Task<T>::Task(Scheduler::IScheduler& scheduler, std::function<T(void)> f)
 // intermediate child cells are still alive
 template <typename T>
 template <typename G>
-auto Async::Task<T>::bind(std::function<Task<G>(T)> f) -> Task<G> {
+auto Async::Task<T>::bind(std::function<Task<G>(T)> func) -> Task<G> {
     auto tracking_cell = std::make_shared<Cell::TrackingOnceCell<G>>();
-    this->cell->await([tracking_cell, f](__attribute__((unused)) auto _, T value) {
-        auto new_task = f(value);
+    this->cell->await([tracking_cell, func](__attribute__((unused)) auto ctx, T value) {
+        auto new_task = func(value);
         tracking_cell->track(new_task.cell);
     });
 
@@ -111,10 +116,10 @@ auto Async::Task<T>::bind(std::function<Task<G>(T)> f) -> Task<G> {
 // implement map using a WORM cell
 template <typename T>
 template <typename G>
-auto Async::Task<T>::map(std::function<G(T)> f) -> Task<G> {
+auto Async::Task<T>::map(std::function<G(T)> func) -> Task<G> {
     auto cell = std::make_shared<Cell::WriteOnceCell<G>>(scheduler);
-    this->cell->await([cell, f](auto ctx, T value) {
-        auto result = f(value);
+    this->cell->await([cell, func](auto ctx, T value) {
+        auto result = func(value);
         cell->write(ctx, result);
     });
 

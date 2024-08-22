@@ -55,7 +55,7 @@ namespace Cell {
 
 template <typename T>
 auto Cell::TrackingOnceCell<T>::read() const -> std::optional<T> {
-    std::shared_lock lock(mutex);
+    const std::shared_lock lock(mutex);
     return cell.has_value() 
                 ? cell.value()->read()
                 : std::nullopt;
@@ -67,7 +67,7 @@ auto Cell::TrackingOnceCell<T>::await(Callback<T> callback) -> void {
     // note that we take a shared lock here to prevent lock contention, as 
     // track is the only other fn that would use the callbacks vector (and claims a unique lock)
     // it is impossible for both await and write to be in the critical section at the same time
-    std::shared_lock lock(mutex);
+    const std::shared_lock lock(mutex);
     if (!cell.has_value()) {
         callbacks.push_back(callback);
         return;
@@ -80,7 +80,7 @@ auto Cell::TrackingOnceCell<T>::await(Callback<T> callback) -> void {
 template <typename T>
 auto Cell::TrackingOnceCell<T>::track(std::shared_ptr<ICell<T>> new_cell) -> bool {
     {
-        std::unique_lock lock(mutex);
+        const std::unique_lock lock(mutex);
         if (cell.has_value()) { return false; }
     
         cell = std::optional(new_cell);
@@ -106,5 +106,10 @@ auto Cell::TrackingOnceCell<T>::block() -> T {
     std::shared_lock lock(mutex);
 
     if (!this->cell.has_value()) { cell_filled.wait(lock); }
+    // NOLINTBEGIN(bugprone-unchecked-optional-access)
+    // Note: it's safe to perform an unchecked optional access here as the semantics of the 
+    //       cell_filled.wait function guarantees that the cell will be filled by the time we reach this point
+    //       hence the optional will never be nullopt
     return this->cell.value()->block();
+    // NOLINTEND(bugprone-unchecked-optional-access)
 }

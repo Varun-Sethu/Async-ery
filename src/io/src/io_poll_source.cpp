@@ -7,12 +7,10 @@ auto Async::IOPollSource::poll() -> std::vector<Scheduler::Job> {
 
     for (auto& [callback, request] : in_flight_requests) {
         if (request.is_completed()) {
-            auto thingo = [callback, request = std::move(request)](auto ctx) {
+            completed_jobs.emplace_back([callback=callback, request = std::move(request)](auto ctx) {
                 auto underlying = request.underlying_request();
                 callback(underlying);
-            };
-
-            completed_jobs.emplace_back(std::move(thingo));
+            });
         } else {
             pending_requests.push_back({ callback, std::move(request) });
         }
@@ -24,8 +22,8 @@ auto Async::IOPollSource::poll() -> std::vector<Scheduler::Job> {
 };
 
 
-auto Async::IOPollSource::queue_read(FILE* fp, Async::IOReadRequest request, Callback callback) -> void {
-    auto in_flight_request = AIOManager::enqueue_and_start_read(fp, request);
+auto Async::IOPollSource::queue_read(FILE* file, Async::IOReadRequest request, Callback callback) -> void {
+    auto in_flight_request = AIOManager::enqueue_and_start_read(file, request);
     auto lock = std::lock_guard<SpinLock>(spinlock);
     in_flight_requests.push_back({ callback, std::move(in_flight_request) });
 }

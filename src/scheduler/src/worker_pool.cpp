@@ -10,7 +10,7 @@ Scheduler::WorkerPool::WorkerPool(int n_workers) {
 
     // start all the workers
     for (auto& worker : workers) {
-        assert(("Failed to start worker", worker.start()));
+        assert(worker.start() && "Failed to start worker");
     }
 }
 

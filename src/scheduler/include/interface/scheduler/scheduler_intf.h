@@ -12,5 +12,13 @@ namespace Scheduler {
     public:
         virtual ~IScheduler() = default;
         auto virtual queue(Context ctx, Job job_fn) -> void = 0;
+
+
+        IScheduler() = default;
+        IScheduler(IScheduler&&) = delete;
+        IScheduler(const IScheduler&) = delete;
+
+        auto operator=(const IScheduler&) -> IScheduler& = delete;
+        auto operator=(IScheduler&&) -> IScheduler& = delete;
     };
 }

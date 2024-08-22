@@ -4,6 +4,7 @@ add_library(${PROJECT_NAME}
     include/${PROJECT_NAME}/aio.h
     include/${PROJECT_NAME}/io_poll_source.h
     include/${PROJECT_NAME}/io_request.h
+    include/${PROJECT_NAME}/types.h
     src/aio.cpp
     src/io_poll_source.cpp
     src/io_request.cpp

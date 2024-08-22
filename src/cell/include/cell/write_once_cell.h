@@ -15,7 +15,7 @@ namespace Cell {
     template <typename T>
     class WriteOnceCell : public ICell<T> {
         public:
-            WriteOnceCell(Scheduler::IScheduler& scheduler);
+            explicit WriteOnceCell(Scheduler::IScheduler& scheduler);
 
             auto read() const -> std::optional<T> override;
 
@@ -40,12 +40,16 @@ namespace Cell {
 
         private:
             mutable std::shared_mutex mutex;
+            mutable std::optional<T> value;
             
-            std::optional<T> value;
             std::vector<Callback<T>> callbacks;
             std::condition_variable_any cell_filled;
 
+            // NOLINTBEGIN(cppcoreguidelines-avoid-const-or-ref-data-members)
+            //  Note: it is an invariant of the Asynchronous library that the scheduler's
+            //        is of 'static lifetime and hence will outlive any cell that uses it
             Scheduler::IScheduler& scheduler;
+            // NOLINTEND(cppcoreguidelines-avoid-const-or-ref-data-members)
     };
 }
 
@@ -56,18 +60,20 @@ namespace Cell {
 
 // Implementation
 template <typename T>
-Cell::WriteOnceCell<T>::WriteOnceCell(Scheduler::IScheduler& scheduler) : scheduler(scheduler) {}
+Cell::WriteOnceCell<T>::WriteOnceCell(Scheduler::IScheduler& scheduler) : 
+    value(std::nullopt),
+    scheduler(scheduler) {}
 
 template <typename T>
 auto Cell::WriteOnceCell<T>::read() const -> std::optional<T> {
-    std::shared_lock lock(mutex);
-    return value;
+    const std::shared_lock lock(mutex);
+    return this->value;
 }
 
 template <typename T>
 auto Cell::WriteOnceCell<T>::write(Scheduler::Context ctx, T write_val) -> bool {
     {
-        std::unique_lock lock(mutex);
+        const std::unique_lock lock(mutex);
         if (value.has_value()) { return false; }
         value = std::optional(write_val);
 
@@ -93,10 +99,11 @@ auto Cell::WriteOnceCell<T>::await(Callback<T> callback) -> void {
     // note that we take a shared lock here to prevent lock contention, as 
     // write is the only other fn that would use the callbacks vector (and claims a unique lock)
     // it is impossible for both await and write to be in the critical section at the same time
-    std::shared_lock lock(mutex);
+    const std::shared_lock lock(mutex);
     if (value.has_value()) {
         auto value_inner = value.value();
-        scheduler.queue(Scheduler::Context::empty(), [=] (auto ctx) { callback(ctx, value_inner); });
+        scheduler.queue(Scheduler::Context::empty(),
+                        [callback, value_inner] (auto ctx) { callback(ctx, value_inner); });
         return;
     }
 
@@ -112,5 +119,10 @@ auto Cell::WriteOnceCell<T>::block() -> T {
         }
     }
 
+    // NOLINTBEGIN(bugprone-unchecked-optional-access)
+    // Note: it's safe to perform an unchecked optional access here as the semantics of the 
+    //       cell_filled.wait function guarantees that the cell will be filled by the time we reach this point
+    //       hence the optional will never be nullopt
     return value.value();
+    // NOLINTEND(bugprone-unchecked-optional-access)
 }

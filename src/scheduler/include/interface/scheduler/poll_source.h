@@ -17,5 +17,13 @@ namespace Scheduler {
 
         [[nodiscard]] virtual auto poll_frequency() -> std::chrono::milliseconds = 0;
         [[nodiscard]] virtual auto poll() -> std::vector<Job> = 0;
+
+
+        IPollSource() = default;
+        IPollSource(IPollSource&&) = delete;
+        IPollSource(const IPollSource&) = delete;
+
+        auto operator=(const IPollSource&) -> IPollSource& = delete;
+        auto operator=(IPollSource&&) -> IPollSource& = delete;
     };
 }

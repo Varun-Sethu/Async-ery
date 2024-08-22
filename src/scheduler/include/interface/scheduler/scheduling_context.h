@@ -12,7 +12,7 @@ namespace Scheduler {
         friend class JobScheduler;
         friend class WorkerPool;
 
-        [[nodiscard]] static auto empty() -> Context { return Context(); }
+        [[nodiscard]] static auto empty() -> Context { return {}; }
 
         auto operator==(const Context& other) const -> bool {
             return worker_id == other.worker_id;
@@ -20,7 +20,7 @@ namespace Scheduler {
 
     private:
         Context() : worker_id(std::nullopt) {}
-        Context(int worker_id) : worker_id(worker_id) {}
+        explicit Context(int worker_id) : worker_id(worker_id) {}
         std::optional<int> worker_id;
     };
 }
