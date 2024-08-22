@@ -1,10 +1,17 @@
+#include <utility>
+#include <optional>
+#include <vector>
+#include <thread>
+
 #include "scheduler/worker.h"
+#include "scheduler/scheduling_context.h"
+#include "scheduler/job.h"
+#include "scheduler/job_queue.h"
 
-
-Scheduler::JobWorker::JobWorker(Context worker_context, StealWork steal_work) : worker_context(worker_context), steal_work(steal_work) {
-    this->job_queue = JobQueue();
-    this->worker_thread = std::nullopt;
-}
+Scheduler::JobWorker::JobWorker(Context worker_context, StealWork steal_work) : 
+    worker_context(worker_context), 
+    steal_work(std::move(steal_work)),
+    worker_thread(std::nullopt) {}
 
 auto Scheduler::JobWorker::start() -> bool {
     if (worker_thread.has_value()) {
@@ -27,7 +34,7 @@ auto Scheduler::JobWorker::start() -> bool {
 }
 
 auto Scheduler::JobWorker::steal_job() -> std::optional<Job> { return job_queue.dequeue(); }
-auto Scheduler::JobWorker::queue(Job job) -> void { queue({ std::move(job) });}
+auto Scheduler::JobWorker::queue(Job job) -> void { queue(std::vector { std::move(job) });}
 auto Scheduler::JobWorker::queue(std::vector<Job> jobs) -> void {
     for (auto& job : jobs) {
         job_queue.enqueue(std::move(job));

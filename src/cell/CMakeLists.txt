@@ -1,5 +1,7 @@
 project(cell)
 
+# TODO: Integrate clang-tidy into the build
+
 add_library(${PROJECT_NAME}
     include/${PROJECT_NAME}/cell.h
     include/${PROJECT_NAME}/tracking_once_cell.h

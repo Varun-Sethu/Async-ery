@@ -10,7 +10,7 @@
 namespace Scheduler {
     class WorkerPool {
     public:
-        WorkerPool(int n_workers);
+        explicit WorkerPool(unsigned int n_workers);
 
         auto queue(Context ctx, Job job) -> void;
         auto queue(Context ctx, std::vector<Job> jobs) -> void;

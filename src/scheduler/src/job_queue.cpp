@@ -1,14 +1,22 @@
+#include <mutex>
+#include <optional>
+#include <atomic>
+#include <utility>
+#include <cstddef>
+
 #include "scheduler/job.h"
 #include "scheduler/job_queue.h"
-
+#include "concurrency/spinlock.h"
 
 
 // Implementation
 auto JobQueue::enqueue(Scheduler::Job&& item) -> void {
-    std::lock_guard<SpinLock> lock(spinlock);
+    const std::lock_guard<SpinLock> lock(spinlock);
 
     auto is_full = (tail + 1) % queue.size() == head;
-    if (is_full) { resize(); }
+    if (is_full) {
+        resize();
+    }
 
     queue[tail] = std::move(item);
     tail = (tail + 1) % queue.size();
@@ -16,19 +24,25 @@ auto JobQueue::enqueue(Scheduler::Job&& item) -> void {
 }
 
 auto JobQueue::dequeue() -> std::optional<Scheduler::Job> {
-    if (this->size() == 0) { return std::nullopt; }
+    if (this->size() == 0) {
+        return std::nullopt;
+    }
 
-    std::lock_guard<SpinLock> lock(spinlock);
-    if (head == tail) { return std::nullopt; }
+    const std::lock_guard<SpinLock> lock(spinlock);
+    if (head == tail) {
+        return std::nullopt;
+    }
 
     auto job = std::optional(std::move(queue[head]));
     head = (head + 1) % queue.size();
-
     current_size.fetch_sub(1, std::memory_order_relaxed);
+
     return job;
 }
 
-auto JobQueue::size() -> size_t { return current_size.load(std::memory_order_relaxed); }
+auto JobQueue::size() const -> size_t {
+    return current_size.load(std::memory_order_relaxed);
+}
 
 // Resize grows the queue to be a factor of two multiplier of the current size
 // NOTE: the function assumes the lock over the queue is currently held

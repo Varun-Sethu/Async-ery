@@ -21,14 +21,14 @@ namespace Scheduler {
     // fit into the continuation model for Async can be implemented via a poll source.
     class Scheduler : public IScheduler {
     public:
-        Scheduler(int n_workers, PollSources poll_sources);            
+        Scheduler(unsigned int n_workers, const PollSources& poll_sources);            
 
         // queue will queue a job to be executed by the scheduler
         auto queue(Context ctx, std::vector<Job> jobs) -> void;
         auto queue(Context ctx, Job job_fn) -> void override;
 
     private:
-        auto begin_poll(std::stop_token stop_token, PollSources poll_sources) -> void;
+        auto begin_poll(const std::stop_token& stop_token, PollSources poll_sources) -> void;
 
         WorkerPool worker_pool;
         std::jthread poll_thread;

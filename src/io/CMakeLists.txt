@@ -1,5 +1,7 @@
 project(io)
 
+# TODO: Integrate clang-tidy into the build
+
 add_library(${PROJECT_NAME}
     include/${PROJECT_NAME}/aio.h
     include/${PROJECT_NAME}/io_poll_source.h

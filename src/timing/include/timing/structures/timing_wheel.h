@@ -55,7 +55,7 @@ TimingWheel<Timer>::TimingWheel(std::chrono::milliseconds wheel_tick_size, size_
 // the nameL non_wrapped_wheel_index
 template <typename Timer>
 auto inline TimingWheel<Timer>::non_wrapped_wheel_index(std::chrono::system_clock::time_point time) -> size_t {
-    return current_wheel_index + ((time - last_advancement_time) / wheel_tick_size);
+    return current_wheel_index + static_cast<size_t>((time - last_advancement_time) / wheel_tick_size);
 }
 
 template <typename Timer>
@@ -75,16 +75,16 @@ auto TimingWheel<Timer>::advance() -> std::vector<Timer> {
     // the wheel several times during this current_time_index
     auto resolved_timers = std::vector<Timer>();
     auto completed_buckets = std::views::iota(current_wheel_index, non_wrapped_wheel_index(now))
-                                | std::views::transform([this](auto i) { return i % num_ticks; });
+                                | std::views::transform([this](auto idx) { return idx % num_ticks; });
 
     // iterate over the wheel and collect all the timers
-    for (auto i : completed_buckets) {
-        for (auto& entry : wheel[i]) {
+    for (auto idx : completed_buckets) {
+        for (auto& entry : wheel[idx]) {
             resolved_timers.push_back(std::move(entry));
         }
 
         // erase the wheel bucket
-        wheel[i].clear();
+        wheel[idx].clear();
     }
             
     current_wheel_index = non_wrapped_wheel_index(now);

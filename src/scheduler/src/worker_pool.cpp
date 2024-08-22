@@ -1,9 +1,17 @@
-#include <assert.h>
+#include <cassert>
+#include <utility>
+#include <vector>
+#include <optional>
+#include <random>
+#include <cstddef>
 
 #include "scheduler/worker_pool.h"
+#include "scheduler/worker.h"
+#include "scheduler/job.h"
+#include "scheduler/scheduling_context.h"
 
-Scheduler::WorkerPool::WorkerPool(int n_workers) {
-    for (int i = 0; i < n_workers; i++) {
+Scheduler::WorkerPool::WorkerPool(unsigned int n_workers) {
+    for (unsigned int i = 0; i < n_workers; i++) {
         auto worker = JobWorker(Context(i), [this]() { return this->find_new_work(); });
         workers.emplace_back(std::move(worker));
     }
@@ -16,8 +24,9 @@ Scheduler::WorkerPool::WorkerPool(int n_workers) {
 
 auto Scheduler::WorkerPool::queue(Context ctx, Job job) -> void { queue(ctx, std::vector<Job> { std::move(job) }); }
 auto Scheduler::WorkerPool::queue(Context ctx, std::vector<Job> jobs) -> void {
-    if (ctx != Context::empty()) {
-        auto& worker = workers[ctx.worker_id.value()];
+    auto worker_id = ctx.worker_id;
+    if (worker_id.has_value()) {
+        auto& worker = workers[worker_id.value()];
         worker.queue(std::move(jobs));
     } else {
         for (auto& job : jobs) {
@@ -35,16 +44,19 @@ auto Scheduler::WorkerPool::find_new_work() -> std::optional<Job> {
 
     // we must now evict a job from another worker queue, we do this by from some random worker
     // until we wrap around, we do this "approximately" skipping if we see no jobs
-    srand(static_cast<unsigned int>(time(nullptr)));
-    auto num_workers = workers.size();
-    auto random_worker = rand() % num_workers;
+    auto ran_dev = std::random_device();
+    auto mersene = std::mt19937(ran_dev());
+    auto dist = std::uniform_int_distribution<int>(0, static_cast<int>(workers.size()) - 1);
 
-    for (int i = 0; i < num_workers; i++) {
+    auto num_workers = workers.size();
+    auto random_worker = static_cast<size_t>(dist(mersene));
+
+    for (size_t i = 0; i < num_workers; i++) {
         auto worker_id = (random_worker + i) % num_workers;
         if (auto job = workers[worker_id].steal_job(); job.has_value()) {
             return job;
         }
     }
 
-    return std::nullopt;
+    return {};
 }

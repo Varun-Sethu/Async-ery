@@ -8,5 +8,5 @@
 
 
 namespace Scheduler {
-    auto create_scheduler(int n_workers, std::vector<std::shared_ptr<IPollSource>> poll_sources) -> std::unique_ptr<IScheduler>;
+    auto create_scheduler(int n_workers, const std::vector<std::shared_ptr<IPollSource>>& poll_sources) -> std::unique_ptr<IScheduler>;
 }

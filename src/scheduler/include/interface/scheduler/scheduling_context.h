@@ -19,8 +19,9 @@ namespace Scheduler {
         }
 
     private:
+        explicit Context(unsigned int worker_id) : worker_id(worker_id) {}
         Context() : worker_id(std::nullopt) {}
-        explicit Context(int worker_id) : worker_id(worker_id) {}
-        std::optional<int> worker_id;
+
+        std::optional<unsigned int> worker_id;
     };
 }

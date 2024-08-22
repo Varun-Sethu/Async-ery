@@ -1,5 +1,7 @@
 project(timing)
 
+# TODO: Integrate clang-tidy into the build
+
 add_library(timing
     include/${PROJECT_NAME}/timing_poll_source.h
     src/timing_poll_source.cpp

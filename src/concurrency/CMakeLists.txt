@@ -1,5 +1,6 @@
 project(concurrency)
 
+# TODO: Integrate clang-tidy into the build
 
 add_library(${PROJECT_NAME}
     include/${PROJECT_NAME}/spinlock.h
