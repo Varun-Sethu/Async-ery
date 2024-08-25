@@ -13,16 +13,16 @@ namespace Cell {
     // and resolves when any of the cells it is tracking resolves
     template <typename T>
     class WhenAnyCell : public ICell<T> {
-        public:
-            WhenAnyCell(Scheduler::IScheduler& scheduler, std::vector<std::shared_ptr<ICell<T>>> cells);
+    public:
+        WhenAnyCell(Scheduler::IScheduler& scheduler, std::vector<std::shared_ptr<ICell<T>>> cells);
 
-            auto read() const -> std::optional<T> override;
-            auto await(Callback<T> callback) -> void override;
-            auto block() -> T override;
+        [[nodiscard]] auto read() const -> std::optional<T> override;
+        [[nodiscard]] auto block() const -> T override;
+        auto await(Callback<T> callback) -> void override;
     
-        private:
-            std::shared_ptr<WriteOnceCell<T>> underlying_cell;
-            std::vector<std::shared_ptr<ICell<T>>> cells;
+    private:
+        std::shared_ptr<WriteOnceCell<T>> underlying_cell;
+        std::vector<std::shared_ptr<ICell<T>>> cells;
     };
 }
 
@@ -52,4 +52,4 @@ template <typename T>
 auto Cell::WhenAnyCell<T>::await(Callback<T> callback) -> void { underlying_cell->await(callback); }
 
 template <typename T>
-auto Cell::WhenAnyCell<T>::block() -> T { return underlying_cell->block(); }
+auto Cell::WhenAnyCell<T>::block() const -> T { return underlying_cell->block(); }

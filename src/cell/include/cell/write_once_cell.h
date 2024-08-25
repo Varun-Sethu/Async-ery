@@ -14,40 +14,40 @@ namespace Cell {
     /// and read from multiple times it is thread-safe and can be awaited
     template <typename T>
     class WriteOnceCell : public ICell<T> {
-        public:
-            explicit WriteOnceCell(Scheduler::IScheduler& scheduler);
+    public:
+        explicit WriteOnceCell(Scheduler::IScheduler& scheduler);
 
-            auto read() const -> std::optional<T> override;
+        [[nodiscard]] auto read() const -> std::optional<T> override;
 
-            // write performs a concurrent write to the WriteOnceCell
-            // it returns a boolean indicating if the write was successful
-            // a false indicates that the cell has already been written to
-            // and hence the write was not successful, there exists two overloaded methods
-            // for this fn, one method takes no scheduling context so uses an empty scheduling context
-            // when dispatching continuations and the other takes a defined context, for more information
-            // on scheduling contexts see the documentation under scheduler.h
-            auto write(T write_val) -> bool { return write(Scheduler::Context::empty(), write_val); }
-            auto write(Scheduler::Context ctx, T write_val) -> bool;
+        // write performs a concurrent write to the WriteOnceCell
+        // it returns a boolean indicating if the write was successful
+        // a false indicates that the cell has already been written to
+        // and hence the write was not successful, there exists two overloaded methods
+        // for this fn, one method takes no scheduling context so uses an empty scheduling context
+        // when dispatching continuations and the other takes a defined context, for more information
+        // on scheduling contexts see the documentation under scheduler.h
+        auto write(T write_val) -> bool { return write(Scheduler::Context::empty(), write_val); }
+        auto write(Scheduler::Context ctx, T write_val) -> bool;
 
-            // await takes a callback function and calls it with the value
-            // of the WriteOnceCell when it is available.
-            auto await(Callback<T> callback) -> void override;
+        // await takes a callback function and calls it with the value
+        // of the WriteOnceCell when it is available.
+        auto await(Callback<T> callback) -> void override;
             
-            // block sleeps the current thread until the value of the cell is available
-            // it then returns the value of the cell, note that this is different from await
-            // as await registers a continuation, while block is a blocking operation
-            auto block() -> T override;
+        // block sleeps the current thread until the value of the cell is available
+        // it then returns the value of the cell, note that this is different from await
+        // as await registers a continuation, while block is a blocking operation
+        [[nodiscard]] auto block() const -> T override;
 
-        private:
-            mutable std::shared_mutex mutex;
-            mutable std::optional<T> value;
+    private:
+        mutable std::shared_mutex mutex;
+        mutable std::optional<T> value;
             
-            std::vector<Callback<T>> callbacks;
-            std::condition_variable_any cell_filled;
+        std::vector<Callback<T>> callbacks;
+        mutable std::condition_variable_any cell_filled;
 
-            //  Note: it is an invariant of the Asynchronous library that the scheduler's
-            //        is of 'static lifetime and hence will outlive any cell that uses it
-            std::reference_wrapper<Scheduler::IScheduler> scheduler;
+        //  Note: it is an invariant of the Asynchronous library that the scheduler's
+        //        is of 'static lifetime and hence will outlive any cell that uses it
+        std::reference_wrapper<Scheduler::IScheduler> scheduler;
     };
 }
 
@@ -109,7 +109,7 @@ auto Cell::WriteOnceCell<T>::await(Callback<T> callback) -> void {
 }
 
 template <typename T>
-auto Cell::WriteOnceCell<T>::block() -> T {
+auto Cell::WriteOnceCell<T>::block() const -> T {
     {
         std::shared_lock lock(mutex);
         if (!value.has_value()) {
