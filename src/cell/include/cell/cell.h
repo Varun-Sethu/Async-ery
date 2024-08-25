@@ -15,18 +15,18 @@ namespace Cell {
 
     template <typename T>
     class ICell {
-        public:
-            virtual ~ICell() = default;
-            [[nodiscard]] virtual auto read() const -> std::optional<T> = 0;
-            virtual auto await(Callback<T> callback) -> void = 0;
-            virtual auto block() -> T = 0;
+    public:
+        virtual auto await(Callback<T> callback) -> void = 0;
+        [[nodiscard]] virtual auto read() const -> std::optional<T> = 0;
+        [[nodiscard]] virtual auto block() const -> T = 0;
 
 
-            ICell() = default;
-            ICell(ICell&&) = delete;
-            ICell(const ICell&) = delete;
+        virtual ~ICell() = default;
+        ICell() = default;
+        ICell(ICell&&) = delete;
+        ICell(const ICell&) = delete;
 
-            auto operator=(const ICell&) -> ICell& = delete;
-            auto operator=(ICell&&) -> ICell& = delete;
+        auto operator=(const ICell&) -> ICell& = delete;
+        auto operator=(ICell&&) -> ICell& = delete;
     };
 }

@@ -14,35 +14,35 @@ namespace Cell {
     // and resolves when all of the cells it is tracking resolves
     template <typename T>
     class WhenAllCell : public ICell<std::vector<T>> {
-        public:
-            WhenAllCell(Scheduler::IScheduler& scheduler, std::vector<std::shared_ptr<ICell<T>>> cells);
+    public:
+        WhenAllCell(Scheduler::IScheduler& scheduler, std::vector<std::shared_ptr<ICell<T>>> cells);
 
-            auto read() const -> std::optional<std::vector<T>> override;
-            auto await(Callback<std::vector<T>> callback) -> void override;
-            auto block() -> std::vector<T> override;
+        [[nodiscard]] auto read() const -> std::optional<std::vector<T>> override;
+        [[nodiscard]] auto block() const -> std::vector<T> override;
+        auto await(Callback<std::vector<T>> callback) -> void override;
+
+    private:
+        struct WhenAllExecutionContext {
+        public:
+            explicit WhenAllExecutionContext(std::vector<T> resolved_values) :
+                _resolved_values(resolved_values),
+                _num_resolved_cells(0),
+                _total_cells(resolved_values.size())
+            {}
+
+            [[nodiscard]] auto resolved_values() -> std::vector<T>& { return _resolved_values; }
+            [[nodiscard]] auto num_resolved_cells() -> std::atomic<size_t>& { return _num_resolved_cells; }
+            [[nodiscard]] auto total_cells() const -> size_t { return _total_cells; }
 
         private:
-            struct WhenAllExecutionContext {
-            public:
-                explicit WhenAllExecutionContext(std::vector<T> resolved_values) :
-                    _resolved_values(resolved_values),
-                    _num_resolved_cells(0),
-                    _total_cells(resolved_values.size())
-                {}
-
-                [[nodiscard]] auto resolved_values() -> std::vector<T>& { return _resolved_values; }
-                [[nodiscard]] auto num_resolved_cells() -> std::atomic<size_t>& { return _num_resolved_cells; }
-                [[nodiscard]] auto total_cells() const -> size_t { return _total_cells; }
-
-            private:
-                std::vector<T> _resolved_values;
-                std::atomic<size_t> _num_resolved_cells;
-                size_t _total_cells;
-            };
+            std::vector<T> _resolved_values;
+            std::atomic<size_t> _num_resolved_cells;
+            size_t _total_cells;
+        };
 
 
-            std::shared_ptr<WriteOnceCell<std::vector<T>>> underlying_cell;
-            std::vector<std::shared_ptr<ICell<T>>> cells;
+        std::shared_ptr<WriteOnceCell<std::vector<T>>> underlying_cell;
+        std::vector<std::shared_ptr<ICell<T>>> cells;
     };
 }
 
@@ -88,4 +88,4 @@ auto Cell::WhenAllCell<T>::await(Callback<std::vector<T>> callback) -> void {
 }
 
 template <typename T>
-auto Cell::WhenAllCell<T>::block() -> std::vector<T> { return underlying_cell->block(); }
+auto Cell::WhenAllCell<T>::block() const -> std::vector<T> { return underlying_cell->block(); }

@@ -16,41 +16,40 @@ namespace Cell {
     /// to track can only be specified once
     template <typename T>
     class TrackingOnceCell : public ICell<T> {
-        public:
-            auto read() const -> std::optional<T> override;
+    public:
+        [[nodiscard]] auto read() const -> std::optional<T> override;
 
-            // await takes a callback function and calls it with the value
-            // of the cell being tracked when it is available, if no cell 
-            // is being tracked, the callback is added to a list of callbacks
-            // and added once we have a tracking cell
-            auto await(Callback<T> callback) -> void override;
+        // await takes a callback function and calls it with the value
+        // of the cell being tracked when it is available, if no cell 
+        // is being tracked, the callback is added to a list of callbacks
+        // and added once we have a tracking cell
+        auto await(Callback<T> callback) -> void override;
 
-            // track sets the cell to track, if a cell is already being tracked
-            // the function returns false, otherwise it returns true indicating a successful track
-            // attempt
-            auto track(std::shared_ptr<ICell<T>> new_cell) -> bool;
+        // track sets the cell to track, if a cell is already being tracked
+        // the function returns false, otherwise it returns true indicating a successful track
+        // attempt
+        auto track(std::shared_ptr<ICell<T>> new_cell) -> bool;
 
-            // block sleeps the current thread until the value of the cell is available
-            // it then returns the value of the cell, note that this is different from await
-            // as await registers a continuation, while block is a blocking operation
-            auto block() -> T override;
+        // block sleeps the current thread until the value of the cell is available
+        // it then returns the value of the cell, note that this is different from await
+        // as await registers a continuation, while block is a blocking operation
+        [[nodiscard]] auto block() const -> T override;
 
-        private:
-            // A note on callbacks:
-            // we need to maintain a set of callbacks for the TrackingCell
-            // as we may not know what cell we are tracking until much later, hence we need to
-            // maintain a set of subscribers to fill once we have a cell to track
-            std::optional<std::shared_ptr<ICell<T>>> cell;
-            std::vector<Callback<T>> callbacks;
-            std::condition_variable_any cell_filled;
+    private:
+        // A note on callbacks:
+        // we need to maintain a set of callbacks for the TrackingCell
+        // as we may not know what cell we are tracking until much later, hence we need to
+        // maintain a set of subscribers to fill once we have a cell to track
+        std::optional<std::shared_ptr<ICell<T>>> cell;
+        std::vector<Callback<T>> callbacks;
 
-            mutable std::shared_mutex mutex;
+        mutable std::condition_variable_any cell_filled;
+        mutable std::shared_mutex mutex;
     };
 }
 
 
 
-// Implementation
 
 
 template <typename T>
@@ -102,7 +101,7 @@ auto Cell::TrackingOnceCell<T>::track(std::shared_ptr<ICell<T>> new_cell) -> boo
 
 
 template <typename T>
-auto Cell::TrackingOnceCell<T>::block() -> T {
+auto Cell::TrackingOnceCell<T>::block() const -> T {
     std::shared_lock lock(mutex);
 
     if (!this->cell.has_value()) { cell_filled.wait(lock); }
