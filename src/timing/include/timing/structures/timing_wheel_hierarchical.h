@@ -10,8 +10,10 @@ template <typename Timer>
     class HierarchicalTimingWheel {
     public:
         HierarchicalTimingWheel(std::chrono::milliseconds tick_size, std::vector<size_t> wheel_sizes);
+
+        [[nodiscard]] auto advance() -> std::vector<Timer>;
         auto schedule(std::chrono::milliseconds duration_from_last_advancement, Timer&& timer) -> void;
-        auto advance() -> std::vector<Timer>;
+
     private:
         auto load_timers_from_wheel(size_t wheel_num) -> void;
         auto determine_timer_wheel(size_t ticks_since_last_advancement) -> std::tuple<size_t, size_t>;
