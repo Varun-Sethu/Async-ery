@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.5)
 
 project(async_lib)
+set(CMAKE_COMPILE_WARNING_AS_ERROR ON)
 add_subdirectory(src)
 
 add_library(${PROJECT_NAME}

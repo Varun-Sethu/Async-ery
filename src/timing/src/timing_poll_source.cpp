@@ -4,15 +4,16 @@
 #include <vector>
 
 #include "timing/timing_poll_source.h"
+#include "timing/structures/timing_wheel_hierarchical.h"
 #include "scheduler/job.h"
 #include "concurrency/spinlock.h"
 
 
 // NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
 Timing::PollSource::PollSource() :
-    wheel(HierarchicalTimingWheel<Scheduler::Job>(
-        /* wheel_tick_size = */ std::chrono::milliseconds(50),
-        /* level_sizes = */ {
+    wheel(Timing::HierarchicalTimingWheel<Scheduler::Job>(
+        /* tick_size = */ std::chrono::milliseconds(50),
+        /* wheel_sizes = */ {
             std::chrono::minutes(1) / std::chrono::milliseconds(50),    // minute wheel (ticks that map to the resolution of 1 minute)
             60, // hour wheel (ticks that map to the resolution of 1 hour)
             24, // day wheel (ticks that map to the resolution of 1 day)
