@@ -16,17 +16,16 @@ using std::chrono_literals::operator""ms;
 // this is probably not ideal and in the future should be upgraded to use a more
 // efficient mechanism, aio allows us to suspend a thread until a tracked job is complete
 // perhaps we can use this to avoid polling
-namespace Async {
-    class IOPollSource : public Scheduler::IPollSource {
-        using Callback = std::function<void(Async::IOReadRequest)>;
+namespace IO {
+    class PollSource : public Scheduler::IPollSource {
+    public:
+        using Callback = std::function<void(IO::ReadRequest)>;
+        auto poll_frequency() -> std::chrono::milliseconds override { return 5ms; };
+        auto poll() -> std::vector<Scheduler::Job> override;
+        auto queue_read(FILE* file, IO::ReadRequest request, const Callback& callback) -> void;
 
-        public:
-            auto poll_frequency() -> std::chrono::milliseconds override { return 5ms; };
-            auto poll() -> std::vector<Scheduler::Job> override;
-            auto queue_read(FILE* file, Async::IOReadRequest request, Callback callback) -> void;
-
-        private:
-            SpinLock spinlock;
-            std::vector<std::pair<Callback, InFlightAIORequest>> in_flight_requests; 
+    private:
+        SpinLock spinlock;
+        std::vector<std::pair<Callback, InFlightAIORequest>> in_flight_requests;
     };
 }

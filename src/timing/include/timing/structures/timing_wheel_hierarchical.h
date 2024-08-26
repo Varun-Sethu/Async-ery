@@ -5,8 +5,9 @@
 #include <ranges>
 
 
+namespace Timing {
 template <typename Timer>
-class HierarchicalTimingWheel {
+    class HierarchicalTimingWheel {
     public:
         HierarchicalTimingWheel(std::chrono::milliseconds tick_size, std::vector<size_t> wheel_sizes);
         auto schedule(std::chrono::milliseconds duration_from_last_advancement, Timer&& timer) -> void;
@@ -35,7 +36,6 @@ class HierarchicalTimingWheel {
         struct Wheel {
             size_t num_buckets;
             size_t ticks_per_bucket;
-
             size_t curr_bucket_index;
             std::vector<std::vector<TimerEntry>> buckets;
         };
@@ -43,12 +43,13 @@ class HierarchicalTimingWheel {
         std::chrono::milliseconds tick_size;
         std::chrono::system_clock::time_point last_advancement_time;
         std::vector<Wheel> wheels;
-};
+    };
+}
 
 
 
 template <typename Timer>
-HierarchicalTimingWheel<Timer>::HierarchicalTimingWheel(std::chrono::milliseconds tick_size, std::vector<size_t> wheel_sizes) :
+Timing::HierarchicalTimingWheel<Timer>::HierarchicalTimingWheel(std::chrono::milliseconds tick_size, std::vector<size_t> wheel_sizes) :
     tick_size(tick_size),
     last_advancement_time(std::chrono::system_clock::now())
 {
@@ -76,7 +77,7 @@ HierarchicalTimingWheel<Timer>::HierarchicalTimingWheel(std::chrono::millisecond
 
 
 template <typename Timer>
-auto HierarchicalTimingWheel<Timer>::schedule(std::chrono::milliseconds duration_from_last_advancement, Timer&& timer) -> void {
+auto Timing::HierarchicalTimingWheel<Timer>::schedule(std::chrono::milliseconds duration_from_last_advancement, Timer&& timer) -> void {
     auto ticks_to_fit = static_cast<size_t>(duration_from_last_advancement / tick_size);
 
     auto [wheel_to_place_in, ticks_left] = determine_timer_wheel(ticks_to_fit);
@@ -89,7 +90,7 @@ auto HierarchicalTimingWheel<Timer>::schedule(std::chrono::milliseconds duration
 
 
 template <typename Timer>
-auto HierarchicalTimingWheel<Timer>::advance() -> std::vector<Timer> {
+auto Timing::HierarchicalTimingWheel<Timer>::advance() -> std::vector<Timer> {
     auto now = std::chrono::system_clock::now();
     if (now - last_advancement_time < tick_size) { return std::vector<Timer>(); }
             
@@ -119,7 +120,7 @@ auto HierarchicalTimingWheel<Timer>::advance() -> std::vector<Timer> {
 // During each load it recomputes the "offset" of that timer into this wheel -> that is how many ticks into the bucket the timer is.
 // For more on offsets see the documentation under TimerEntry.
 template <typename Timer>
-auto HierarchicalTimingWheel<Timer>::load_timers_from_wheel(size_t wheel_num) -> void {
+auto Timing::HierarchicalTimingWheel<Timer>::load_timers_from_wheel(size_t wheel_num) -> void {
     if (wheel_num == wheels.size() || wheel_num == 0) { return; }
 
     auto& [num_buckets, _, wheel_index, wheel] = wheels[wheel_num];
@@ -156,7 +157,7 @@ auto HierarchicalTimingWheel<Timer>::load_timers_from_wheel(size_t wheel_num) ->
 //  if the bucket's index is at 2 and the bucket for this timer is 0, we need to move the timer to the next heirarchy.
 //  Alongside this, as we progress up the heirarchy we need to subtract the ticks from the previous heirarchy since they are consumed by the heirarchy below.
 template <typename Timer>
-auto HierarchicalTimingWheel<Timer>::determine_timer_wheel(size_t ticks_since_last_advancement) -> std::tuple<size_t, size_t> {
+auto Timing::HierarchicalTimingWheel<Timer>::determine_timer_wheel(size_t ticks_since_last_advancement) -> std::tuple<size_t, size_t> {
     auto ticks_to_fit = ticks_since_last_advancement;
     auto can_fit_in_wheel = [&wheels=this->wheels, &ticks_to_fit](auto wheel) {
         if (wheel == wheels.size() - 1) { return true; }
@@ -176,7 +177,7 @@ auto HierarchicalTimingWheel<Timer>::determine_timer_wheel(size_t ticks_since_la
 
 
 template <typename Timer>
-auto inline HierarchicalTimingWheel<Timer>::determine_new_bottom_wheel_index(std::chrono::system_clock::time_point now) -> size_t {
+auto inline Timing::HierarchicalTimingWheel<Timer>::determine_new_bottom_wheel_index(std::chrono::system_clock::time_point now) -> size_t {
     auto& lowest_wheel_bucket_index = wheels[0].curr_bucket_index;
     auto bucket_index = lowest_wheel_bucket_index + static_cast<size_t>((now - last_advancement_time) / tick_size);
     return bucket_index;

@@ -16,7 +16,7 @@ using std::chrono_literals::operator""ms;
 
 auto main() -> int {
     // Async runtime setup
-    auto timing_poll_source = std::make_shared<Async::TimingPollSource>();
+    auto timing_poll_source = std::make_shared<Timing::PollSource>();
     auto scheduler = Scheduler::create_scheduler(3, { timing_poll_source });
     auto timing_source = Async::TaskTimerSource(*scheduler, *timing_poll_source);
     

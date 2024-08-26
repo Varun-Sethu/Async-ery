@@ -5,10 +5,10 @@
 #include "scheduler/poll_source.h"
 #include "scheduler/job.h"
 
-namespace Async {
-    class TimingPollSource : public Scheduler::IPollSource {
+namespace Timing {
+    class PollSource : public Scheduler::IPollSource {
         public:
-            TimingPollSource();
+            PollSource();
 
             auto schedule(std::chrono::milliseconds expiry, Scheduler::Job task) -> void;
             auto poll_frequency() -> std::chrono::milliseconds override;
