@@ -7,15 +7,16 @@
 
 namespace Timing {
     class PollSource : public Scheduler::IPollSource {
-        public:
-            PollSource();
+    public:
+        PollSource();
 
-            auto schedule(std::chrono::milliseconds expiry, Scheduler::Job task) -> void;
-            auto poll_frequency() -> std::chrono::milliseconds override;
-            auto poll() -> std::vector<Scheduler::Job> override;
+        [[nodiscard]] auto poll_frequency() -> std::chrono::milliseconds override;
+        [[nodiscard]] auto poll() -> std::vector<Scheduler::Job> override;
 
-        private:
-            SpinLock spinlock;
-            HierarchicalTimingWheel<Scheduler::Job> wheel;
+        auto schedule(std::chrono::milliseconds expiry, Scheduler::Job task) -> void;
+
+    private:
+        SpinLock spinlock;
+        HierarchicalTimingWheel<Scheduler::Job> wheel;
     };
 }
