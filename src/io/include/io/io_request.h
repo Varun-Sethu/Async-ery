@@ -6,10 +6,10 @@
 
 // NOLINTBEGIN(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
 //  - Note: The aio API requires us to use a C-style array for the buffer, regular C++ arrays are not compatible.
-namespace Async {
-    class IOReadRequest {
+namespace IO {
+    class ReadRequest {
     public:
-        IOReadRequest(Size nbytes, Offset offset);
+        ReadRequest(Size nbytes, Offset offset);
 
         [[nodiscard]] auto size() const -> size_t { return nbytes.size(); }
         [[nodiscard]] auto offset() const -> off_t { return file_offset.offset(); }

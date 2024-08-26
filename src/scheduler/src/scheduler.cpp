@@ -26,7 +26,7 @@ auto Scheduler::Scheduler::queue(Context ctx, std::vector<Job> jobs) -> void {
 // after a poll job is complete it will then schedule it n-seconds in the future based on the poll frequency
 auto Scheduler::Scheduler::begin_poll(const std::stop_token& stop_token, PollSources poll_sources) -> void {
     // NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
-    auto poll_scheduler = TimingWheel<PollSource>(
+    auto poll_scheduler = Timing::TimingWheel<PollSource>(
         /* wheel_tick_size = */ std::chrono::milliseconds(10),
         /* num_ticks = */ std::chrono::minutes(1) / std::chrono::milliseconds(10));
     // NOLINTEND(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)

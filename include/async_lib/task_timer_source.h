@@ -11,7 +11,7 @@
 namespace Async {
     class TaskTimerSource {
         public:
-            TaskTimerSource(Scheduler::IScheduler& scheduler, TimingPollSource& timing_poll_source) : 
+            TaskTimerSource(Scheduler::IScheduler& scheduler, Timing::PollSource& timing_poll_source) : 
                 scheduler(scheduler),
                 timing_poll_source(timing_poll_source) {}
 
@@ -28,6 +28,6 @@ namespace Async {
             //      the timing_poll_source's lifetime should match the entire application lifetime. This is trivially true as
             //      the timing_poll_source is captured via shared ownership by the scheduler, hence its lifetime is the same
             std::reference_wrapper<Scheduler::IScheduler> scheduler;
-            std::reference_wrapper<Async::TimingPollSource> timing_poll_source;
+            std::reference_wrapper<Timing::PollSource> timing_poll_source;
     };
 }

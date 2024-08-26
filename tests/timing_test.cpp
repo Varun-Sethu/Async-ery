@@ -33,7 +33,7 @@ auto main() -> int {
      *      lvl 2: [800ms -> 2000ms)  --- [800ms - 1400ms)[1400ms - 2000ms)                     -> [8-14][14-20]
      * 
      */
-    auto wheel = HierarchicalTimingWheel<IntWrapper>(100ms, {2, 3, 2});
+    auto wheel = Timing::HierarchicalTimingWheel<IntWrapper>(100ms, {2, 3, 2});
 
     wheel.schedule(0ms, IntWrapper(1));
     wheel.schedule(50ms, IntWrapper(2));

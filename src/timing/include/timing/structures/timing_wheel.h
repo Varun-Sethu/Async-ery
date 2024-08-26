@@ -11,15 +11,16 @@
 //  - To advance the wheel invoke the advance() fn, this will return all the timers that expired
 //    during that advancement
 
-template <typename Timer>
-class TimingWheel {
-    using TimeBucket = std::vector<Timer>;
-
+namespace Timing {
+    template <typename Timer>
+    class TimingWheel {
     public:
+        using TimeBucket = std::vector<Timer>;
+
         TimingWheel(std::chrono::milliseconds wheel_tick_size, size_t num_ticks);
 
+        [[nodiscard]] auto advance() -> std::vector<Timer>;
         auto schedule(std::chrono::milliseconds duration_from_last_advancement, Timer&& timer) -> void;
-        auto advance() -> std::vector<Timer>;
 
     private:
         auto inline non_wrapped_wheel_index(std::chrono::system_clock::time_point time) -> size_t;
@@ -27,10 +28,10 @@ class TimingWheel {
         std::vector<TimeBucket> wheel;
         std::chrono::milliseconds wheel_tick_size;
         std::chrono::system_clock::time_point last_advancement_time;
-
         size_t num_ticks;
         size_t current_wheel_index = 0;        
-};
+    };
+}
 
 
 
@@ -39,7 +40,7 @@ class TimingWheel {
 
 
 template <typename Timer>
-TimingWheel<Timer>::TimingWheel(std::chrono::milliseconds wheel_tick_size, size_t num_ticks) :
+Timing::TimingWheel<Timer>::TimingWheel(std::chrono::milliseconds wheel_tick_size, size_t num_ticks) :
     wheel(std::vector<TimeBucket>(num_ticks)),
     wheel_tick_size(wheel_tick_size),
     last_advancement_time(std::chrono::system_clock::now()),
@@ -54,19 +55,19 @@ TimingWheel<Timer>::TimingWheel(std::chrono::milliseconds wheel_tick_size, size_
 // note that it doesn't normalize the index by taking the modulus against the wheel size, hence
 // the nameL non_wrapped_wheel_index
 template <typename Timer>
-auto inline TimingWheel<Timer>::non_wrapped_wheel_index(std::chrono::system_clock::time_point time) -> size_t {
+auto inline Timing::TimingWheel<Timer>::non_wrapped_wheel_index(std::chrono::system_clock::time_point time) -> size_t {
     return current_wheel_index + static_cast<size_t>((time - last_advancement_time) / wheel_tick_size);
 }
 
 template <typename Timer>
-auto TimingWheel<Timer>::schedule(std::chrono::milliseconds duration_from_last_advancement, Timer&& timer) -> void {
+auto Timing::TimingWheel<Timer>::schedule(std::chrono::milliseconds duration_from_last_advancement, Timer&& timer) -> void {
     auto index = non_wrapped_wheel_index(last_advancement_time + duration_from_last_advancement);
     auto time_bucket = index % num_ticks;
     wheel[time_bucket].push_back(std::move(timer));
 }
 
 template <typename Timer>
-auto TimingWheel<Timer>::advance() -> std::vector<Timer> {
+auto Timing::TimingWheel<Timer>::advance() -> std::vector<Timer> {
     auto now = std::chrono::system_clock::now();
     if (now - last_advancement_time < wheel_tick_size) { return std::vector<Timer>(); }
 

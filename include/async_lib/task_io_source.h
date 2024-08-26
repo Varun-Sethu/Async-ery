@@ -7,12 +7,12 @@
 namespace Async {
     class TaskIOSource {
         public:
-            TaskIOSource(Scheduler::IScheduler& scheduler, Async::IOPollSource& io_poll_source) : 
+            TaskIOSource(Scheduler::IScheduler& scheduler, IO::PollSource& io_poll_source) : 
                 scheduler(scheduler),
                 io_poll_source(io_poll_source) {}
 
 
-            auto read(FILE* file, Async::IOReadRequest request) -> Async::Task<Async::IOReadRequest>;
+            auto read(FILE* file, IO::ReadRequest request) -> Async::Task<IO::ReadRequest>;
 
         private:
             // Note:
@@ -23,6 +23,6 @@ namespace Async {
             //      the io_poll_source's lifetime should match the entire application lifetime. This is trivially true as
             //      the io_poll_source is captured via shared ownership by the scheduler, hence its lifetime is the same
             std::reference_wrapper<Scheduler::IScheduler> scheduler;
-            std::reference_wrapper<Async::IOPollSource> io_poll_source;
+            std::reference_wrapper<IO::PollSource> io_poll_source;
     };
 }

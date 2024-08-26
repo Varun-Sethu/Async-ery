@@ -10,6 +10,8 @@
 #include "task.h"
 
 namespace Async {
+    namespace IO = ::IO;
+
     // TaskFactory exists for the sole purpose of tying together the various components of the Async
     // library to a singular scheduler instance, it is mostly a convenience class and does not need to be used
     // if not required. It should be noted however that if one is not using this class, ideally they should be threading
@@ -34,8 +36,8 @@ namespace Async {
             template <typename T>
             auto when_all(std::vector<Task<T>> tasks) -> Task<std::vector<T>>;
         private:
-            std::shared_ptr<TimingPollSource> timing_poll_source;
-            std::shared_ptr<IOPollSource> io_poll_source;
+            std::shared_ptr<Timing::PollSource> timing_poll_source;
+            std::shared_ptr<IO::PollSource> io_poll_source;
             std::unique_ptr<Scheduler::IScheduler> scheduler;
     };
 }
@@ -44,8 +46,8 @@ namespace Async {
 
 // Implementation
 inline Async::TaskFactory::TaskFactory(int n_workers) :
-    timing_poll_source(std::make_shared<Async::TimingPollSource>()),
-    io_poll_source(std::make_shared<Async::IOPollSource>()),
+    timing_poll_source(std::make_shared<Timing::PollSource>()),
+    io_poll_source(std::make_shared<IO::PollSource>()),
     scheduler(Scheduler::create_scheduler(n_workers, { timing_poll_source, io_poll_source }))
 {}
 
