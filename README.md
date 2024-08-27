@@ -111,7 +111,5 @@ for (auto x: when_all_task.block()) { std::cout << x << '\n'; }
 ```
 
 ## TODO
- - Clean up namespace pollution and fix module boundaries
-    - Expose API target for each library within src/
  - Error task results
  - Write IO tasks

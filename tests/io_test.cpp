@@ -31,7 +31,7 @@ auto main() -> int {
     
     auto file     = std::unique_ptr<FILE, decltype(&fclose)>(fopen("tests/io.txt", "r"), &fclose);
     auto io_req = Async::IO::ReadRequest(Async::IO::Size(1024), Async::IO::Offset(0));
-    io_source.read(file.get(), io_req)
+    __attribute__((unused)) auto _ = io_source.read(file.get(), io_req)
              .map<Async::Unit>(read_file_body)
              .bind<Async::Unit>(delay_by(timer_source, 300ms))
              .block();

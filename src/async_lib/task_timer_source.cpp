@@ -1,3 +1,9 @@
+#include <memory>
+#include <chrono>
+
+#include "async_lib/task.h"
+#include "async_lib/task_value_source.h"
+#include "async_lib/types.h"
 #include "async_lib/task_timer_source.h"
 
 auto Async::TaskTimerSource::after(std::chrono::milliseconds duration) -> Async::Task<Unit> {

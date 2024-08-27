@@ -4,7 +4,6 @@
 #include <functional>
 
 namespace Async {
-    using Job = std::function<void(void)>;
     using Unit = std::monostate;
 
     // TODO: Incorporate this into the task return type

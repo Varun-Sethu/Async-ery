@@ -9,6 +9,10 @@
 #include "concurrency/spinlock.h"
 #include "scheduler/job.h"
 
+// NOLINTBEGIN(cppcoreguidelines-macro-usage)
+#define UNUSED(x) __attribute__((unused))x
+// NOLINTEND(cppcoreguidelines-macro-usage)
+
 auto IO::PollSource::poll() -> std::vector<Scheduler::Job> {                
     const auto lock = std::lock_guard<SpinLock>(spinlock);
     auto completed_jobs = std::vector<Scheduler::Job>();
@@ -16,7 +20,7 @@ auto IO::PollSource::poll() -> std::vector<Scheduler::Job> {
 
     for (auto& [callback, request] : in_flight_requests) {
         if (request.is_completed()) {
-            completed_jobs.emplace_back([callback=callback, request = std::move(request)](__attribute__((unused)) auto ctx) {
+            completed_jobs.emplace_back([callback=callback, request = std::move(request)](UNUSED(auto ctx)) {
                 auto underlying = request.underlying_request();
                 callback(underlying);
             });

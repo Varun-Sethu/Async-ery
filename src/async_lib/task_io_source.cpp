@@ -1,6 +1,9 @@
 #include <cstdio>
+#include <utility>
 
 #include "async_lib/task_io_source.h"
+#include "async_lib/task.h"
+#include "async_lib/task_value_source.h"
 #include "io/io_request.h"
 
 
@@ -11,6 +14,6 @@ auto Async::TaskIOSource::read(FILE* file, IO::ReadRequest request) -> Async::Ta
         task_source.complete(buffer);
     };
 
-    io_poll_source.get().queue_read(file, request, read_callback);
+    io_poll_source.get().queue_read(file, std::move(request), read_callback);
     return task;
 }
