@@ -24,7 +24,7 @@ auto main() -> int {
 
     for (int j = 0; j < 1000; j++) {
         auto offset = j * 100ms;
-        timing_source.after(1000ms + offset).map<int>([&counter](__attribute__((unused)) auto _) {
+        auto _ = timing_source.after(1000ms + offset).map<int>([&counter](__attribute__((unused)) auto _) {
             counter.fetch_add(1);
             return 0;
         });

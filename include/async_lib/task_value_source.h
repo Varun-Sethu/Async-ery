@@ -14,19 +14,19 @@ namespace Async {
     // mutate their underlying cell after instantiation and the only mutation source is Complete()
     template <typename T>
     class TaskValueSource {
-        public:
-            explicit TaskValueSource(Scheduler::IScheduler& scheduler);
+    public:
+        explicit TaskValueSource(Scheduler::IScheduler& scheduler);
             
-            auto complete(T value) -> void;
-            auto complete(Scheduler::Context ctx, T value) -> void;
+        [[nodiscard]] auto create() -> Async::Task<T>;
+        auto complete(T value) -> void;
+        auto complete(Scheduler::Context ctx, T value) -> void;
 
-            auto create() -> Async::Task<T>;
-        private:
-            //  Note: it is an invariant of the Asynchronous library that the scheduler's
-            //        lifetime is longer than the lifetime of any task / cell that uses it.
-            //        in the application scope it has a 'static lifetime
-            std::shared_ptr<Cell::WriteOnceCell<T>> task_cell;
-            std::reference_wrapper<Scheduler::IScheduler> scheduler;
+    private:
+        //  Note: it is an invariant of the Asynchronous library that the scheduler's
+        //        lifetime is longer than the lifetime of any task / cell that uses it.
+        //        in the application scope it has a 'static lifetime
+        std::shared_ptr<Cell::WriteOnceCell<T>> task_cell;
+        std::reference_wrapper<Scheduler::IScheduler> scheduler;
     };
 }
 
@@ -37,12 +37,17 @@ Async::TaskValueSource<T>::TaskValueSource(Scheduler::IScheduler& scheduler) : s
     this->task_cell = std::make_shared<Cell::WriteOnceCell<T>>(scheduler);
 }
 
+template <typename T>
+auto Async::TaskValueSource<T>::complete(T value) -> void {
+    this->task_cell->write(value);
+}
 
 template <typename T>
-auto Async::TaskValueSource<T>::complete(T value) -> void { this->task_cell->write(value); }
+auto Async::TaskValueSource<T>::complete(Scheduler::Context ctx, T value) -> void {
+    this->task_cell->write(ctx, value);
+}
 
 template <typename T>
-auto Async::TaskValueSource<T>::complete(Scheduler::Context ctx, T value) -> void { this->task_cell->write(ctx, value); }
-
-template <typename T>
-auto Async::TaskValueSource<T>::create() -> Async::Task<T> { return Async::Task<T>(this->scheduler.get(), this->task_cell); }
+auto Async::TaskValueSource<T>::create() -> Async::Task<T> {
+    return { this->scheduler.get(), this->task_cell };
+}

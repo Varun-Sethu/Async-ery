@@ -1,9 +1,24 @@
 cmake_minimum_required(VERSION 3.5)
 
 project(async_lib)
-set(CMAKE_COMPILE_WARNING_AS_ERROR ON)
-add_subdirectory(src)
 
+set(CMAKE_COMPILE_WARNING_AS_ERROR ON)
+set(CMAKE_CXX_CLANG_TIDY clang-tidy-17 "-config-file=${CMAKE_SOURCE_DIR}/.clang-tidy")
+add_compile_options(-Wall 
+                    -Wextra
+                    -pedantic-errors
+                    -Wnon-virtual-dtor
+                    -Werror
+                    -Wconversion
+                    -Wdouble-promotion
+                    -Wnull-dereference
+                    -Wcast-align
+                    -Wuninitialized
+                    -Wsuggest-override
+                    -Wzero-as-null-pointer-constant
+                    -fstack-protector-strong)
+                    
+add_subdirectory(src)
 add_library(${PROJECT_NAME}
     include/${PROJECT_NAME}/task_factory.h
     include/${PROJECT_NAME}/task_io_source.h
@@ -19,21 +34,6 @@ target_link_libraries(${PROJECT_NAME} PUBLIC scheduler_intf cell io timing timin
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 20)
 set_property(TARGET ${PROJECT_NAME} PROPERTY LINKER_LANGUAGE CXX)
-
-set(CMAKE_CXX_CLANG_TIDY clang-tidy-17 "-config-file=${CMAKE_SOURCE_DIR}/.clang-tidy")
-add_compile_options(-Wall 
-                    -Wextra
-                    -pedantic-errors
-                    -Wnon-virtual-dtor
-                    -Werror
-                    -Wconversion
-                    -Wdouble-promotion
-                    -Wnull-dereference
-                    -Wcast-align
-                    -Wuninitialized
-                    -Wsuggest-override
-                    -Wzero-as-null-pointer-constant
-                    -fstack-protector-strong)
 
 
 target_include_directories(${PROJECT_NAME} PUBLIC include)

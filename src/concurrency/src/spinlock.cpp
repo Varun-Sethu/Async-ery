@@ -1,11 +1,11 @@
-#include <time.h>
-#include <iostream>
+#include <atomic>
+#include <thread>
+#include <chrono>
 
 #include "concurrency/spinlock.h"
 
 auto SpinLock::lock() -> void {
     const int num_attempts = 15;
-    const timespec backoff_time = {0, 1};
 
     for (;;) {
         // try to acquire the mutex (num_attempts) times, eventually backing off and yielding
@@ -15,11 +15,12 @@ auto SpinLock::lock() -> void {
             __builtin_ia32_pause();
         }
         
-        if (potentially_acquirable && !is_acquired.exchange(true, std::memory_order_acquire)) { return; }
-        else {
-            // back off and yield
-            nanosleep(&backoff_time, nullptr);
+        if (potentially_acquirable && !is_acquired.exchange(true, std::memory_order_acquire)) {
+            return; 
         }
+
+        // back off and yield
+        std::this_thread::sleep_for(std::chrono::nanoseconds(1));
     }
 }
 
