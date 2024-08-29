@@ -8,17 +8,18 @@
 #include <vector>
 
 #include "scheduler/scheduling_context.h"
+#include "cell/cell_result.h"
 
 namespace Cell {
-    template <typename T>
-    using Callback = std::function<void(Scheduler::Context, T)>;
+    template <typename T, typename Err>
+    using Callback = std::function<void(Scheduler::Context, Cell::Result<T, Err>)>;
 
-    template <typename T>
+    template <typename T, typename Err>
     class ICell {
     public:
-        virtual auto await(Callback<T> callback) -> void = 0;
-        [[nodiscard]] virtual auto read() const -> std::optional<T> = 0;
-        [[nodiscard]] virtual auto block() const -> T = 0;
+        virtual auto await(Callback<T, Err> callback) -> void = 0;
+        [[nodiscard]] virtual auto read() const -> std::optional<Cell::Result<T, Err>> = 0;
+        [[nodiscard]] virtual auto block() const -> Cell::Result<T, Err> = 0;
 
 
         virtual ~ICell() = default;

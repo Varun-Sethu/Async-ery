@@ -20,6 +20,7 @@ add_compile_options(-Wall
                     
 add_subdirectory(src)
 add_library(${PROJECT_NAME}
+    include/${PROJECT_NAME}/async_result.h
     include/${PROJECT_NAME}/task_factory.h
     include/${PROJECT_NAME}/task_io_source.h
     include/${PROJECT_NAME}/task_timer_source.h
