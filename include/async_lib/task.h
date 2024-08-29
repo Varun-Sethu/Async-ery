@@ -153,8 +153,8 @@ template <typename T>
 auto Async::Task<T>::block() -> Async::Result<T> {
     auto cell_result = this->cell->block();
     return Cell::map_result(cell_result, 
-        [](T value) { return Async::Result<T>(value); },
-        [](Async::Error err) { return Async::Result<T>(err); });
+        [](T value) { return { value }; },
+        [](Async::Error err) { return { err }; });
 }
 
 

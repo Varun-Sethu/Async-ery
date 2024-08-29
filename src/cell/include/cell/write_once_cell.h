@@ -28,12 +28,12 @@ namespace Cell {
         // on scheduling contexts see the documentation under scheduler.h
         auto error(Err err) -> bool { return error(Scheduler::Context::empty(), err); }
         auto error(Scheduler::Context ctx, Err err) -> bool {
-            return write_result_to_value(ctx, Cell::Result<T, Err>(err));
+            return write_result_to_value(ctx, { err });
         }
 
         auto write(T write_val) -> bool { return write(Scheduler::Context::empty(), write_val); }
         auto write(Scheduler::Context ctx, T write_val) -> bool {
-            return write_result_to_value(ctx, Cell::Result<T, Err>(write_val));
+            return write_result_to_value(ctx, { write_val });
         }
 
         // await takes a callback function and calls it with the value
@@ -107,8 +107,10 @@ auto Cell::WriteOnceCell<T, Err>::await(Callback<T, Err> callback) -> void {
     const std::shared_lock lock(mutex);
     if (value.has_value()) {
         auto value_inner = value.value();
-        scheduler.get().queue(Scheduler::Context::empty(),
-                        [callback, value_inner] (auto ctx) { callback(ctx, value_inner); });
+        scheduler.get().queue(
+            Scheduler::Context::empty(),
+            [callback, value_inner] (auto ctx) { callback(ctx, value_inner); });
+
         return;
     }
 
