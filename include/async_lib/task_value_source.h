@@ -12,7 +12,8 @@ namespace Async {
     // when the TaskValueSource is marked as completed. The source is driven by a singular cell
     // that is fed to all tasks spawned from the source. This is largely inspired by .NET's 
     // TaskCompletionSource. It is safe to feed the same cell to multiple tasks as tasks cannot
-    // mutate their underlying cell after instantiation and the only mutation source is Complete()
+    // mutate their underlying cell after instantiation and the only mutation source is Complete() and 
+    // Error()
     template <typename T>
     class TaskValueSource {
     public:

@@ -26,7 +26,7 @@ namespace Cell {
         public:
             explicit WhenAnyExecutionContext(size_t num_cells) : _num_erroneous_cells(0), total_cells(num_cells) {}
 
-            // write_error commits an error to the execution context's error log, if all the cells have errored out
+            // log_error commits an error to the execution context's error log, if all the cells have errored out
             // then this function returns true, otherwise it returns false
             [[nodiscard]] auto log_error() -> bool {
                 auto cells_errored_so_far = 1 + _num_erroneous_cells.fetch_add(1, std::memory_order_relaxed);
@@ -54,6 +54,7 @@ Cell::WhenAnyCell<T, Err>::WhenAnyCell(Scheduler::IScheduler& scheduler, std::ve
     // Underlying cell must be a shared pointer because there is a chance that the destructor of the WhenAnyCell
     // gets invoked prior to the runtime scheduling the continuation we pass to the cells... if this happens it would be sad
     // however to prevent erroneous situations we only invoke the destructor of the underlying cell once all the cells have resolved
+    // ie. each of the callbacks must assume ownership of the underlying cell
     auto exe_ctx = std::make_shared<WhenAnyExecutionContext>(this->cells.size());
     auto underlying_cell = this->underlying_cell;
 
@@ -62,8 +63,8 @@ Cell::WhenAnyCell<T, Err>::WhenAnyCell(Scheduler::IScheduler& scheduler, std::ve
             Cell::visit_result(value, 
                 [underlying_cell, ctx](T value) { underlying_cell->write(ctx, value); }, 
                 [underlying_cell, ctx, exe_ctx] (Err err) {
-                    auto all_cells_errored = exe_ctx->log_error();
-                    if (all_cells_errored) {
+                    auto all_cells_have_errored = exe_ctx->log_error();
+                    if (all_cells_have_errored) {
                         underlying_cell->error(ctx, err);
                     }
                 }

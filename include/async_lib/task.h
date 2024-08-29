@@ -134,10 +134,7 @@ auto Async::Task<T>::map(std::function<G(T)> func) -> Task<G> {
     auto cell = std::make_shared<Cell::WriteOnceCell<G, Async::Error>>(scheduler);
     auto callback = [cell, func](auto ctx, Cell::Result<T, Async::Error> value) {
         Cell::visit_result(value, 
-            [cell, func, ctx](T value) {
-                auto result = func(value);
-                cell->write(ctx, result);
-            },
+            [cell, func, ctx](T value) { cell->write(ctx, func(value)); },
             [cell, ctx](Async::Error err) { cell->error(ctx, err); });
     };
 

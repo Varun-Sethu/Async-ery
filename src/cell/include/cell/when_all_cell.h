@@ -26,8 +26,8 @@ namespace Cell {
         public:
             explicit WhenAllExecutionContext(std::vector<T> resolved_values) :
                 _resolved_values(resolved_values),
-                _num_resolved_cells(0),
-                _total_cells(resolved_values.size())
+                num_resolved_cells(0),
+                total_cells(resolved_values.size())
             {}
 
             // commit_resolved_value is a helper function that commits a resolved value to the execution context
@@ -37,7 +37,7 @@ namespace Cell {
             // guaranteed that each cell touches a unique part of the cells array
             [[nodiscard]] auto commit_resolved_value(size_t cell_id, T value) -> bool {
                 _resolved_values[cell_id] = value;
-                auto cells_resolved_so_far = _num_resolved_cells.fetch_add(1, std::memory_order_relaxed);
+                auto cells_resolved_so_far = num_resolved_cells.fetch_add(1, std::memory_order_relaxed);
                 return cells_resolved_so_far + 1 >= _total_cells;
             }
 
@@ -45,8 +45,8 @@ namespace Cell {
 
         private:
             std::vector<T> _resolved_values;
-            std::atomic<size_t> _num_resolved_cells;
-            size_t _total_cells;
+            std::atomic<size_t> num_resolved_cells;
+            size_t total_cells;
         };
 
 
@@ -66,8 +66,9 @@ Cell::WhenAllCell<T, Err>::WhenAllCell(Scheduler::IScheduler& scheduler, std::ve
 {
     // We maintain a shared execution context for the same reason why underlying_cell is itself a shared pointer
     // there is a possibility that the destructor for this cell is invoked prior to the runtime scheduling the continuations
-    // for each of the cells, while such a situation is sad we need to ensure no erroneous situations arise, hence we only
-    // kill metadata associated with this combinator after all cells are resolved 
+    // for each of the cells, while such a situation is sad we need to ensure no erroneous situations arise, ie. no segfaults,
+    // hence even though the continuations will never be used (the parent died) they must capture a reference to the underlying
+    // cell and all associated metadata
     auto execution_context = std::make_shared<WhenAllExecutionContext>(std::vector<T>(this->cells.size()));
     auto underlying_cell = this->underlying_cell;
 

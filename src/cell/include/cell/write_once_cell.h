@@ -19,11 +19,11 @@ namespace Cell {
 
         [[nodiscard]] auto read() const -> std::optional<Cell::Result<T, Err>> override;
 
-        // error & write performs a concurrent write to the WriteOnceCell
+        // error/write performs a concurrent write to the WriteOnceCell
         // it returns a boolean indicating if the error/write was successful (could be written)
         // a false indicates that the cell has already been written to
         // and hence the write was not successful, there exists two overloaded methods
-        // for this fn, one method takes no scheduling context so uses an empty scheduling context
+        // for each error/write fn, one method takes no scheduling context so uses an empty scheduling context
         // when dispatching continuations and the other takes a defined context, for more information
         // on scheduling contexts see the documentation under scheduler.h
         auto error(Err error) -> bool { return error(Scheduler::Context::empty(), error); }
