@@ -3,7 +3,6 @@
 #include <iostream>
 #include <functional>
 #include <memory>
-#include <ranges>
 
 #include "async_lib/types.h"
 #include "async_lib/async_result.h"
@@ -33,10 +32,14 @@ namespace Async {
 
     public:
         Task(Scheduler::IScheduler& scheduler, std::function<T(void)> func);
-    
+
+        // bind is a method that takes a function that takes the value of the cell and returns a new task
+        // it then returns a new task that will resolve to the value of the new task
         template <typename G>
         [[nodiscard]] auto bind(std::function<Task<G>(T)> func) -> Task<G>;
 
+        // map is a method that takes a function and applies it to the value of the cell
+        // it then returns a new task that will resolve to the result of the function
         template <typename G>
         [[nodiscard]] auto map(std::function<G(T)> func) -> Task<G>;
 
@@ -59,6 +62,8 @@ namespace Async {
             scheduler(scheduler), cell(std::move(cell)) {}
         
     private:
+        static auto task_list_to_cell_list(std::vector<Task<T>> tasks) -> std::vector<std::shared_ptr<Cell::ICell<T, Async::Error>>>;
+
         //  Note: it is an invariant of the Asynchronous library that the scheduler's
         //        lifetime is longer than the lifetime of any task / cell that uses it.
         //        in the application scope it has a 'static lifetime
@@ -153,30 +158,26 @@ auto Async::Task<T>::block() -> Async::Result<T> {
 
 
 template <typename T>
+auto Async::Task<T>::task_list_to_cell_list(std::vector<Task<T>> tasks) -> std::vector<std::shared_ptr<Cell::ICell<T, Async::Error>>> {
+    auto cells = std::vector<std::shared_ptr<Cell::ICell<T, Async::Error>>>();
+    for (auto& task : tasks) {
+        cells.push_back(task.cell);
+    }
+
+    return cells;
+}
+
+template <typename T>
 auto Async::Task<T>::when_any(Scheduler::IScheduler& scheduler, std::vector<Task<T>> tasks) -> Task<T> {
-    using std::views::transform;
-    using CellList = std::vector<std::shared_ptr<Cell::ICell<T, Async::Error>>>;
-
-    auto get_cell = [](auto& task) { return task.cell; };
-    auto all_cells = tasks | transform(get_cell);
-    auto when_any_cell = std::make_shared<Cell::WhenAnyCell<T, Async::Error>>(
-        scheduler, 
-        CellList(all_cells.begin(), all_cells.end()));
-
+    auto cells = task_list_to_cell_list(tasks);
+    auto when_any_cell = std::make_shared<Cell::WhenAnyCell<T, Async::Error>>(scheduler, cells);
     return { scheduler, when_any_cell };
 }
 
 
 template <typename T>
 auto Async::Task<T>::when_all(Scheduler::IScheduler& scheduler, std::vector<Task<T>> tasks) -> Task<std::vector<T>> {
-    using std::views::transform;
-    using CellList = std::vector<std::shared_ptr<Cell::ICell<T, Async::Error>>>;
-
-    auto get_cell = [](auto& task) { return task.cell; };
-    auto all_cells = tasks | transform(get_cell);
-    auto when_all_cell = std::make_shared<Cell::WhenAllCell<T, Async::Error>>(
-        scheduler, 
-        CellList(all_cells.begin(), all_cells.end()));
-
+    auto cells = task_list_to_cell_list(tasks);
+    auto when_all_cell = std::make_shared<Cell::WhenAllCell<T, Async::Error>>(scheduler, cells);
     return { scheduler, when_all_cell };
 }

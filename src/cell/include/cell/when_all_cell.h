@@ -38,7 +38,7 @@ namespace Cell {
             [[nodiscard]] auto commit_resolved_value(size_t cell_id, T value) -> bool {
                 _resolved_values[cell_id] = value;
                 auto cells_resolved_so_far = num_resolved_cells.fetch_add(1, std::memory_order_relaxed);
-                return cells_resolved_so_far + 1 >= _total_cells;
+                return cells_resolved_so_far + 1 >= total_cells;
             }
 
             [[nodiscard]] auto resolved_values() -> std::vector<T>& { return _resolved_values; }
