@@ -42,19 +42,17 @@ target_include_directories(${PROJECT_NAME} PRIVATE src/${PROJECT_NAME})
 
 
 # ==== For testing ====
-add_executable(io_test tests/io_test.cpp)
-add_executable(timing_test tests/timing_test.cpp)
-add_executable(main tests/main.cpp)
-add_executable(stress_test tests/stress.cpp)
+add_executable(io_example examples/io_example.cpp)
+add_executable(main_example examples/main_example.cpp)
+add_executable(concurrency_example examples/concurrency.cpp)
+add_executable(error_example examples/error_example.cpp)
 
-set_property(TARGET io_test PROPERTY CXX_STANDARD 20)
-set_property(TARGET timing_test PROPERTY CXX_STANDARD 20)
-set_property(TARGET main PROPERTY CXX_STANDARD 20)
-set_property(TARGET stress_test PROPERTY CXX_STANDARD 20)
-
+set_property(TARGET io_example PROPERTY CXX_STANDARD 23)
+set_property(TARGET main_example PROPERTY CXX_STANDARD 23)
+set_property(TARGET error_example PROPERTY CXX_STANDARD 23)
 
 
-target_link_libraries(io_test PRIVATE async_lib)
-target_link_libraries(timing_test PRIVATE timing_structures)
-target_link_libraries(main PRIVATE async_lib)
-target_link_libraries(stress_test PRIVATE async_lib)
+
+target_link_libraries(io_example PRIVATE async_lib)
+target_link_libraries(main_example PRIVATE async_lib)
+target_link_libraries(error_example PRIVATE async_lib)

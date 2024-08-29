@@ -21,7 +21,7 @@ auto IO::PollSource::poll() -> std::vector<Scheduler::Job> {
     for (auto& [callback, request] : in_flight_requests) {
         if (request.is_completed()) {
             completed_jobs.emplace_back([callback=callback, request = std::move(request)](UNUSED(auto ctx)) {
-                auto underlying = request.underlying_request();
+                auto underlying = request.result();
                 callback(underlying);
             });
         } else {

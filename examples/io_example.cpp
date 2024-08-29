@@ -8,6 +8,8 @@
 
 #include "async_lib/task_factory.h"
 
+#define unused(x) __attribute__((unused))x
+
 using std::chrono_literals::operator""ms;
 
 auto read_file_body(IO::ReadRequest req) -> Async::Unit {
@@ -29,9 +31,9 @@ auto main() -> int {
     auto io_source = task_factory.io_source();
     auto timer_source = task_factory.timer_source();
     
-    auto file     = std::unique_ptr<FILE, decltype(&fclose)>(fopen("tests/io.txt", "r"), &fclose);
+    auto file = std::unique_ptr<FILE, decltype(&fclose)>(fopen("tests/io.txt", "r"), &fclose);
     auto io_req = Async::IO::ReadRequest(Async::IO::Size(1024), Async::IO::Offset(0));
-    __attribute__((unused)) auto _ = io_source.read(file.get(), io_req)
+    unused(auto _) = io_source.read(file.get(), io_req)
              .map<Async::Unit>(read_file_body)
              .bind<Async::Unit>(delay_by(timer_source, 300ms))
              .block();

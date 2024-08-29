@@ -26,9 +26,9 @@ namespace Cell {
         // for each error/write fn, one method takes no scheduling context so uses an empty scheduling context
         // when dispatching continuations and the other takes a defined context, for more information
         // on scheduling contexts see the documentation under scheduler.h
-        auto error(Err error) -> bool { return error(Scheduler::Context::empty(), error); }
-        auto error(Scheduler::Context ctx, Err error) -> bool {
-            return write_result_to_value(ctx, Cell::Result<T, Err>(error));
+        auto error(Err err) -> bool { return error(Scheduler::Context::empty(), err); }
+        auto error(Scheduler::Context ctx, Err err) -> bool {
+            return write_result_to_value(ctx, Cell::Result<T, Err>(err));
         }
 
         auto write(T write_val) -> bool { return write(Scheduler::Context::empty(), write_val); }

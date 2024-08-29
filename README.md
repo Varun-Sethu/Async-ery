@@ -111,5 +111,4 @@ for (auto x: when_all_task.block()) { std::cout << x << '\n'; }
 ```
 
 ## TODO
- - Error task results
  - Write IO tasks

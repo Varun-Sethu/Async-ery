@@ -5,6 +5,7 @@
 #include <functional>
 
 #include "io_request.h"
+#include "aio_request_result.h"
 
 
 namespace IO {
@@ -14,8 +15,9 @@ namespace IO {
             : request(std::move(request)),
               control_block(std::move(control_block)) {}
 
-        [[nodiscard]] auto underlying_request() const -> ReadRequest;
+        [[nodiscard]] auto result() const -> AIOResult<ReadRequest>;
         [[nodiscard]] auto aio_control_block() const -> const std::shared_ptr<struct aiocb>&;
+
         auto is_completed() -> bool;
 
     private:
