@@ -4,6 +4,7 @@
 #include <cerrno>
 
 #include "io/aio.h"
+#include "io/aio_request_result.h"
 #include "io/io_request.h"
 
 

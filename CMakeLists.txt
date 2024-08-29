@@ -49,10 +49,11 @@ add_executable(error_example examples/error_example.cpp)
 
 set_property(TARGET io_example PROPERTY CXX_STANDARD 23)
 set_property(TARGET main_example PROPERTY CXX_STANDARD 23)
+set_property(TARGET concurrency_example PROPERTY CXX_STANDARD 23)
 set_property(TARGET error_example PROPERTY CXX_STANDARD 23)
-
 
 
 target_link_libraries(io_example PRIVATE async_lib)
 target_link_libraries(main_example PRIVATE async_lib)
+target_link_libraries(concurrency_example PRIVATE async_lib)
 target_link_libraries(error_example PRIVATE async_lib)
