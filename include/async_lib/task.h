@@ -80,10 +80,11 @@ namespace Async {
 // Implementation
 template <typename T>
 Async::Task<T>::Task(Scheduler::IScheduler& scheduler, std::function<T(void)> func) : scheduler(scheduler) {
-    this->cell = std::make_shared<Cell::WriteOnceCell<T, Async::Error>>(scheduler);
+    auto cell = std::make_shared<Cell::WriteOnceCell<T, Async::Error>>(scheduler);
+    this->cell = cell;
     this->scheduler.get().queue(
         Scheduler::Context::empty(),
-        [cell=this->cell, func](auto ctx) {
+        [cell, func](auto ctx) {
             auto result = func();
             cell->write(ctx, result);
         }
@@ -152,8 +153,8 @@ template <typename T>
 auto Async::Task<T>::block() -> Async::Result<T> {
     auto cell_result = this->cell->block();
     return Cell::map_result(cell_result, 
-        [](T value) { return Async::Result<T>(value); },
-        [](Async::Error err) { return Async::Result<T>(err); });
+        [](T value) { return Async::Result<T> { value }; },
+        [](Async::Error err) { return Async::Result<T> { err }; });
 }
 
 

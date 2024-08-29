@@ -7,6 +7,7 @@
 
 #include "aio.h"
 #include "io_request.h"
+#include "aio_request_result.h"
 #include "scheduler/poll_source.h"
 #include "concurrency/spinlock.h"
 
@@ -19,7 +20,7 @@ using std::chrono_literals::operator""ms;
 namespace IO {
     class PollSource : public Scheduler::IPollSource {
     public:
-        using Callback = std::function<void(IO::ReadRequest)>;
+        using Callback = std::function<void(IO::AIOResult<IO::ReadRequest>)>;
         auto poll_frequency() -> std::chrono::milliseconds override { return 5ms; };
         auto poll() -> std::vector<Scheduler::Job> override;
         auto queue_read(FILE* file, IO::ReadRequest request, const Callback& callback) -> void;

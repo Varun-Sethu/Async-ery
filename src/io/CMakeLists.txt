@@ -15,6 +15,7 @@ add_compile_options(-Wall
                     -Wzero-as-null-pointer-constant)
 
 add_library(${PROJECT_NAME}
+    include/${PROJECT_NAME}/aio_request_result.h
     include/${PROJECT_NAME}/aio.h
     include/${PROJECT_NAME}/io_poll_source.h
     include/${PROJECT_NAME}/io_request.h
