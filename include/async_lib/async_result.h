@@ -14,6 +14,8 @@ namespace Async {
                 return "Rejected";
             case IOError:
                 return "IOError";
+            default:
+                return "Unknown";
         }
     }
 
