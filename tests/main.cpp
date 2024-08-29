@@ -56,9 +56,11 @@ auto main() -> int {
     task_source.complete(100);
 
     std::cout << "Waiting for computation to complete..." << std::endl;
-    std::cout << "Result when any: " << when_any.block() << std::endl;
+    std::cout << "Result when any: " << std::get<int>(when_any.block()) << std::endl;
     std::cout << "Result when all: ";
-    for (auto& x : when_all.block()) {
+    auto when_all_result = when_all.block();
+
+    for (auto x : std::get<std::vector<int>>(when_all_result)) {
         std::cout << x << " ";
     }
     std::cout << std::endl;
