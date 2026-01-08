@@ -1,5 +1,3 @@
-#include <iostream>
-#include <functional>
 #include <map>
 
 #include "async_lib/task_factory.h"

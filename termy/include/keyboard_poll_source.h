@@ -3,8 +3,6 @@
 #include <vector>
 #include <array>
 #include <chrono>
-#include <memory>
-#include <mutex>
 #include <unistd.h>
 #include <fcntl.h>
 
@@ -84,10 +82,10 @@ namespace Termy {
             for (const auto& listener : listeners) {
                 jobs.emplace_back([listener, key](auto) { listener(key); });
             }
-    
+
             return jobs;
         }
-    
+
         termios term;
         std::vector<KeyListener> listeners;
     };

@@ -6,6 +6,10 @@
 
 #include "scheduler/scheduler_factory.h"
 #include "scheduler/poll_source.h"
+#include "interface/timing/timer_poll_source_intf.h"
+#include "interface/io/io_poll_source_intf.h"
+#include "timing/timing_poll_source.h"
+#include "io/io_poll_source.h"
 #include "async_lib/task_io_source.h"
 #include "async_lib/task_timer_source.h"
 #include "async_lib/async_enumerable.h"
@@ -21,7 +25,12 @@ namespace Async {
     // THE SAME scheduler instance through all task instances to ensure that they are all executed on the same thread pool.
     class TaskFactory {
     public:
-        explicit TaskFactory(int n_workers, std::vector<std::shared_ptr<Scheduler::IPollSource>>);
+        explicit TaskFactory(int n_workers, std::vector<std::shared_ptr<Scheduler::IPollSource>> additional_poll_sources = {});
+        TaskFactory(
+            std::shared_ptr<Scheduler::IScheduler> scheduler,
+            std::shared_ptr<Timing::IPollSource> timer_source,
+            std::shared_ptr<IO::IPollSource> io_source
+        );
 
         template <typename T>
         [[nodiscard]] auto value_source() -> TaskValueSource<T>;
@@ -40,9 +49,9 @@ namespace Async {
         [[nodiscard]] auto when_all(std::vector<Task<T>> tasks) -> Task<std::vector<T>>;
 
     private:
-        std::shared_ptr<Timing::PollSource> timing_poll_source;
-        std::shared_ptr<IO::PollSource> io_poll_source;
-        std::unique_ptr<Scheduler::IScheduler> scheduler;
+        std::shared_ptr<Timing::IPollSource> timing_poll_source;
+        std::shared_ptr<IO::IPollSource> io_poll_source;
+        std::shared_ptr<Scheduler::IScheduler> scheduler;
     };
 }
 
@@ -51,11 +60,21 @@ namespace Async {
 // Implementation
 inline Async::TaskFactory::TaskFactory(int n_workers, std::vector<std::shared_ptr<Scheduler::IPollSource>> poll_sources) :
     timing_poll_source(std::make_shared<Timing::PollSource>()),
-    io_poll_source(std::make_shared<IO::PollSource>())
+    io_poll_source(std::make_shared<::IO::PollSource>())
 {
     poll_sources.insert(poll_sources.begin(), { timing_poll_source, io_poll_source });
     scheduler = Scheduler::create_scheduler(n_workers, poll_sources);
 }
+
+inline Async::TaskFactory::TaskFactory(
+    std::shared_ptr<Scheduler::IScheduler> scheduler,
+    std::shared_ptr<Timing::IPollSource> timer_source,
+    std::shared_ptr<IO::IPollSource> io_source
+) :
+    timing_poll_source(std::move(timer_source)),
+    io_poll_source(std::move(io_source)),
+    scheduler(std::move(scheduler))
+{}
 
 template <typename T>
 auto inline Async::TaskFactory::value_source() -> TaskValueSource<T> {

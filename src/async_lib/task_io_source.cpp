@@ -16,8 +16,8 @@
 auto Async::TaskIOSource::read(FILE* file, IO::ReadRequest request) -> Async::Task<IO::ReadRequest> {
     auto task_source = TaskValueSource<IO::ReadRequest>(scheduler);
     auto task = task_source.create();
-    auto read_callback = [task_source](auto io_result) mutable {
-        IO::visit_aio_result(io_result, 
+    auto read_callback = [task_source](const auto& io_result) mutable {
+        IO::visit_aio_result(io_result,
             [&task_source](const IO::ReadRequest& buff) { task_source.complete(buff); },
             [&task_source](UNUSED(auto err)) { task_source.error(Async::IOError); }
         );
