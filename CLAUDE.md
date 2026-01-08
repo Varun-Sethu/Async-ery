@@ -83,6 +83,7 @@ Errors propagate through chains via `Result<T, Error>` variants with `Error::Rej
 - Use `const auto&` where appropriate
 - No single-line if statements
 - Use auto in for loop variables
+- Do not add comments to the code
 - For complex boolean conditions, extract to a descriptive variable:
   ```cpp
   auto is_cancellable = !state_->fired && !state_->cancelled;

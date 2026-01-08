@@ -2,7 +2,6 @@
 
 #include <memory>
 #include <thread>
-#include <optional>
 
 #include "scheduler/scheduler_intf.h"
 #include "scheduler/poll_source.h"
@@ -12,7 +11,7 @@
 namespace Scheduler {
     using PollSource = std::shared_ptr<IPollSource>;
     using PollSources = std::vector<PollSource>;
-    
+
     // The core Scheduler is a work stealing scheduler based on a sequence of worker pools. Worker's are responsible for
     // executing work and all continuations are scheduled on the queue for that worker that just executed the job.
     // Workers that run out of work can evict work from other workers. Alongside this the scheduler also has a poll thread
@@ -21,7 +20,7 @@ namespace Scheduler {
     // fit into the continuation model for Async can be implemented via a poll source.
     class Scheduler : public IScheduler {
     public:
-        Scheduler(unsigned int n_workers, const PollSources& poll_sources);            
+        Scheduler(unsigned int n_workers, const PollSources& poll_sources);
 
         // queue will queue a job to be executed by the scheduler
         auto queue(Context ctx, Job&& job_fn) -> void override;
@@ -33,4 +32,3 @@ namespace Scheduler {
         std::jthread poll_thread;
     };
 }
-
