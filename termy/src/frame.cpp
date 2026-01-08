@@ -2,51 +2,47 @@
 
 namespace Termy {
 
-Frame::Frame(const std::string& initial)
-    : buffer_(initial)
+Frame::Frame(Span2D<Cell> view)
+    : view_(view)
 {}
 
-auto Frame::write(const std::string& text,
-                  std::optional<Color> fg,
-                  std::optional<Color> bg) -> void
-{
-    auto has_color = fg.has_value() || bg.has_value();
-    if (!has_color) {
-        buffer_.append(text);
+auto Frame::set_content_width(size_t width) -> void {
+    content_width_ = width;
+}
+
+auto Frame::write(
+    const std::string& text,
+    std::optional<Color> fg,
+    std::optional<Color> bg
+) -> void {
+    if (cursor_row_ >= view_.height) {
         return;
     }
 
-    constexpr size_t max_escape_overhead = 16;
-    buffer_.reserve(buffer_.size() + text.size() + max_escape_overhead);
+    auto left_padding = std::max(std::size_t(0), view_.width - content_width_) / 2;
+    auto effective_fg = fg.value_or(Color::Default);
+    auto effective_bg = bg.value_or(Color::Default);
 
-    buffer_.append("\033[");
-    if (fg.has_value()) {
-        buffer_.append(std::to_string(to_foreground_code(*fg)));
+    for (auto i = 0u; i < text.size(); ++i) {
+        auto col = left_padding + cursor_col_;
+        auto column_overflows_frame = col >= view_.width;
+        if (column_overflows_frame) {
+            break;
+        }
+
+        view_.at(cursor_row_, col) = Cell {
+            .ch = text[i],
+            .fg = effective_fg,
+            .bg = effective_bg
+        };
+
+        cursor_col_++;
     }
-    if (fg.has_value() && bg.has_value()) {
-        buffer_.append(";");
-    }
-    if (bg.has_value()) {
-        buffer_.append(std::to_string(to_background_code(*bg)));
-    }
-    buffer_.append("m");
-    buffer_.append(text);
-    buffer_.append("\033[0m");
 }
 
-auto Frame::newline() -> void
-{
-    buffer_ += "\n";
-}
-
-auto Frame::to_string() const -> std::string
-{
-    return buffer_;
-}
-
-auto Frame::operator==(const Frame& other) const -> bool
-{
-    return buffer_ == other.buffer_;
+auto Frame::newline() -> void {
+    ++cursor_row_;
+    cursor_col_ = 0;
 }
 
 }

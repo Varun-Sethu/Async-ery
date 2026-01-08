@@ -1,8 +1,6 @@
 #include "menu.h"
 #include "key.h"
 
-#include <algorithm>
-
 namespace Termy {
 
 Menu::Menu(std::vector<MenuItem> items, IKeyboardSource& keyboard_source, MenuColors colors)
@@ -18,9 +16,10 @@ Menu::Menu(std::vector<MenuItem> items, IKeyboardSource& keyboard_source, MenuCo
     });
 }
 
-auto Menu::render(Frame& frame) -> void
+auto Menu::render(Frame frame) -> void
 {
     auto item_width = width();
+    frame.set_content_width(static_cast<size_t>(item_width));
 
     for (size_t i = 0; i < items_.size(); ++i) {
         const auto is_focused = (i == focused_index_);
