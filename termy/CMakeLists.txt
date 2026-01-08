@@ -2,7 +2,12 @@ cmake_minimum_required(VERSION 3.5)
 
 project(termy)
 
-add_executable(termy main.cpp)
+add_executable(termy
+    main.cpp
+    src/frame.cpp
+    src/menu.cpp
+    src/keyboard_poll_source.cpp
+)
 
 target_link_libraries(termy PRIVATE async_lib)
 
@@ -30,11 +35,15 @@ enable_testing()
 
 add_executable(termy_tests
     test/test_main.cpp
+    test/menu_test.cpp
+    src/frame.cpp
+    src/menu.cpp
 )
 
 target_include_directories(termy_tests PRIVATE
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/test
 )
 
 target_link_libraries(termy_tests PRIVATE
