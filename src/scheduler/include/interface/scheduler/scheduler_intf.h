@@ -11,7 +11,7 @@ namespace Scheduler {
     class IScheduler {
     public:
         virtual ~IScheduler() = default;
-        auto virtual queue(Context ctx, Job job_fn) -> void = 0;
+        auto virtual queue(Context ctx, Job&& job_fn) -> void = 0;
 
 
         IScheduler() = default;

@@ -25,9 +25,9 @@ namespace Cell {
         struct WhenAllExecutionContext {
         public:
             explicit WhenAllExecutionContext(std::vector<T> resolved_values) :
-                _resolved_values(resolved_values),
                 num_resolved_cells(0),
-                total_cells(resolved_values.size())
+                total_cells(resolved_values.size()),
+                _resolved_values(std::move(resolved_values))
             {}
 
             // commit_resolved_value is a helper function that commits a resolved value to the execution context
@@ -44,9 +44,9 @@ namespace Cell {
             [[nodiscard]] auto resolved_values() -> std::vector<T>& { return _resolved_values; }
 
         private:
-            std::vector<T> _resolved_values;
             std::atomic<size_t> num_resolved_cells;
             size_t total_cells;
+            std::vector<T> _resolved_values;
         };
 
 

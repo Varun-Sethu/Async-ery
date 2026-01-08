@@ -1,6 +1,5 @@
 #include <utility>
 #include <optional>
-#include <vector>
 #include <thread>
 
 #include "scheduler/worker.h"
@@ -34,9 +33,4 @@ auto Scheduler::JobWorker::start() -> bool {
 }
 
 auto Scheduler::JobWorker::steal_job() -> std::optional<Job> { return job_queue.dequeue(); }
-auto Scheduler::JobWorker::queue(Job job) -> void { queue(std::vector { std::move(job) });}
-auto Scheduler::JobWorker::queue(std::vector<Job> jobs) -> void {
-    for (auto& job : jobs) {
-        job_queue.enqueue(std::move(job));
-    }
-}
+auto Scheduler::JobWorker::queue(Job&& job) -> void { job_queue.enqueue(std::move(job));}

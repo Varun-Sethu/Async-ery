@@ -24,8 +24,7 @@ namespace Scheduler {
         Scheduler(unsigned int n_workers, const PollSources& poll_sources);            
 
         // queue will queue a job to be executed by the scheduler
-        auto queue(Context ctx, std::vector<Job> jobs) -> void;
-        auto queue(Context ctx, Job job_fn) -> void override;
+        auto queue(Context ctx, Job&& job_fn) -> void override;
 
     private:
         auto begin_poll(const std::stop_token& stop_token, PollSources poll_sources) -> void;

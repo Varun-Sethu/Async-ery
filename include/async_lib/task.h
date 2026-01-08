@@ -11,9 +11,17 @@
 #include "cell/tracking_once_cell.h"
 #include "cell/when_any_cell.h"
 #include "cell/when_all_cell.h"
+#include "cell/immediately_resolved_cell.h"
 
 // NOLINTBEGIN(cppcoreguidelines-macro-usage)
 #define UNUSED(x) __attribute__((unused))x
+#define move_assign_1(x) x = std::move(x)
+#define move_assign_2(x, ...) x = std::move(x), move_assign_1(__VA_ARGS__)
+#define move_assign_3(x, ...) x = std::move(x), move_assign_2(__VA_ARGS__)
+#define move_assign_4(x, ...) x = std::move(x), move_assign_3(__VA_ARGS__)
+
+#define GET_MACRO(_1,_2,_3,_4,NAME,...) NAME
+#define move_assign(...) GET_MACRO(__VA_ARGS__, move_assign_4, move_assign_3, move_assign_2, move_assign_1)(__VA_ARGS__)
 // NOLINTEND(cppcoreguidelines-macro-usage)
 
 namespace Async {
@@ -47,6 +55,7 @@ namespace Async {
         // it will then return the value of the cell.
         [[nodiscard]] auto block() -> Async::Result<T>;
 
+        // TODO: why do these need to take schedulers as arguments?
         // when_any is a task that resolves when any of the provided underlying tasks are resolved
         // under the hood the task claims shared ownership of the cells it is tracking
         [[nodiscard]] static auto when_any(Scheduler::IScheduler& scheduler, std::vector<Task<T>> tasks) -> Task<T>;
@@ -55,6 +64,10 @@ namespace Async {
         // in a final vector whose order matches the order of the tasks
         [[nodiscard]] static auto when_all(Scheduler::IScheduler& scheduler, std::vector<Task<T>> tasks) -> Task<std::vector<T>>;
 
+        // immediate_task is a task that resolves immediately to the provided value, it resolves at construction
+        // it is useful for creating tasks that resolve immediately without having to use a scheduler
+        [[nodiscard]] static auto immediate_task(Scheduler::IScheduler& scheduler, T value) -> Task<T>;
+
     protected:
         // ICell are an implementation detail so creation of Tasks from them is restricted
         // to be exclusively a private constructor
@@ -62,7 +75,7 @@ namespace Async {
             scheduler(scheduler), cell(std::move(cell)) {}
         
     private:
-        static auto task_list_to_cell_list(std::vector<Task<T>> tasks) -> std::vector<std::shared_ptr<Cell::ICell<T, Async::Error>>>;
+        static auto task_list_to_cell_list(std::vector<Task<T>>& tasks) -> std::vector<std::shared_ptr<Cell::ICell<T, Async::Error>>>;
 
         //  Note: it is an invariant of the Asynchronous library that the scheduler's
         //        lifetime is longer than the lifetime of any task / cell that uses it.
@@ -84,7 +97,7 @@ Async::Task<T>::Task(Scheduler::IScheduler& scheduler, std::function<T(void)> fu
     this->cell = cell;
     this->scheduler.get().queue(
         Scheduler::Context::empty(),
-        [cell, func](auto ctx) {
+        [cell, move_assign(func)](auto ctx) {
             auto result = func();
             cell->write(ctx, result);
         }
@@ -114,9 +127,9 @@ auto Async::Task<T>::bind(std::function<Task<G>(T)> func) -> Task<G> {
     auto tracking_cell = std::make_shared<Cell::TrackingOnceCell<G, Async::Error>>();
     auto error_cell = std::make_shared<Cell::WriteOnceCell<G, Async::Error>>(scheduler);
 
-    auto callback = [tracking_cell, error_cell, func](auto ctx, Cell::Result<T, Async::Error> value) {
+    auto callback = [tracking_cell, error_cell, move_assign(func)](auto ctx, Cell::Result<T, Async::Error> value) {
         auto cell_to_track = Cell::map_result(value, 
-            [func](T value) { return func(value).cell; },
+            [move_assign(func)](T value) { return func(value).cell; },
             [ctx, error_cell](Async::Error err) { 
                 error_cell->error(ctx, err);
                 return std::static_pointer_cast<Cell::ICell<G, Async::Error>>(error_cell);
@@ -126,7 +139,7 @@ auto Async::Task<T>::bind(std::function<Task<G>(T)> func) -> Task<G> {
         tracking_cell->track(cell_to_track);
     };
 
-    this->cell->await(callback);
+    this->cell->await(std::move(callback));
     return { scheduler, tracking_cell };
 }
 
@@ -138,13 +151,13 @@ template <typename T>
 template <typename G>
 auto Async::Task<T>::map(std::function<G(T)> func) -> Task<G> {
     auto cell = std::make_shared<Cell::WriteOnceCell<G, Async::Error>>(scheduler);
-    auto callback = [cell, func](auto ctx, Cell::Result<T, Async::Error> value) {
+    auto callback = [cell, move_assign(func)](auto ctx, Cell::Result<T, Async::Error> value) {
         Cell::visit_result(value, 
-            [cell, func, ctx](T value) { cell->write(ctx, func(value)); },
+            [cell, move_assign(func), ctx](T value) { cell->write(ctx, func(value)); },
             [cell, ctx](Async::Error err) { cell->error(ctx, err); });
     };
 
-    this->cell->await(callback);
+    this->cell->await(std::move(callback));
     return { scheduler, cell };
 }
 
@@ -159,10 +172,10 @@ auto Async::Task<T>::block() -> Async::Result<T> {
 
 
 template <typename T>
-auto Async::Task<T>::task_list_to_cell_list(std::vector<Task<T>> tasks) -> std::vector<std::shared_ptr<Cell::ICell<T, Async::Error>>> {
+auto Async::Task<T>::task_list_to_cell_list(std::vector<Task<T>>& tasks) -> std::vector<std::shared_ptr<Cell::ICell<T, Async::Error>>> {
     auto cells = std::vector<std::shared_ptr<Cell::ICell<T, Async::Error>>>();
     for (auto& task : tasks) {
-        cells.push_back(task.cell);
+        cells.push_back(std::move(task.cell));
     }
 
     return cells;
@@ -181,4 +194,11 @@ auto Async::Task<T>::when_all(Scheduler::IScheduler& scheduler, std::vector<Task
     auto cells = task_list_to_cell_list(tasks);
     auto when_all_cell = std::make_shared<Cell::WhenAllCell<T, Async::Error>>(scheduler, cells);
     return { scheduler, when_all_cell };
+}
+
+
+template <typename T>
+auto Async::Task<T>::immediate_task(Scheduler::IScheduler& scheduler, T value) -> Task<T> {
+    auto cell = std::make_shared<Cell::ImmediatelyResolvedCell<T, Async::Error>>(std::move(value));
+    return { scheduler, cell };
 }

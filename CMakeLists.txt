@@ -2,9 +2,20 @@ cmake_minimum_required(VERSION 3.5)
 
 project(async_lib)
 
+set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+option(CONFIG_ENABLE_CLANG_TIDY "Enable clang-tidy checks" OFF)
+
 set(CMAKE_COMPILE_WARNING_AS_ERROR ON)
-set(CMAKE_CXX_CLANG_TIDY clang-tidy-17 "-config-file=${CMAKE_SOURCE_DIR}/.clang-tidy")
-add_compile_options(-Wall 
+
+if (CONFIG_ENABLE_CLANG_TIDY)
+    set(CMAKE_CXX_CLANG_TIDY clang-tidy-17 "-config-file=${CMAKE_SOURCE_DIR}/.clang-tidy")
+endif()
+
+# if in debug mode, enable sanitizers
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_compile_options(-Wall 
                     -Wextra
                     -pedantic-errors
                     -Wnon-virtual-dtor
@@ -16,7 +27,11 @@ add_compile_options(-Wall
                     -Wuninitialized
                     -Wsuggest-override
                     -Wzero-as-null-pointer-constant
-                    -fstack-protector-strong)
+                    -fstack-protector-strong
+                    -Wpessimizing-move
+                    -Wredundant-move)
+endif()
+
                     
 add_subdirectory(src)
 add_library(${PROJECT_NAME}
@@ -40,6 +55,8 @@ set_property(TARGET ${PROJECT_NAME} PROPERTY LINKER_LANGUAGE CXX)
 target_include_directories(${PROJECT_NAME} PUBLIC include)
 target_include_directories(${PROJECT_NAME} PRIVATE src/${PROJECT_NAME})
 
+# ==== For termy ====
+add_subdirectory(termy)
 
 # ==== For testing ====
 add_executable(io_example examples/io_example.cpp)

@@ -46,7 +46,7 @@ auto when_all_computation(Async::TaskFactory& task_factory, Async::TaskValueSour
 
 auto main() -> int {
     // Async runtime setup
-    auto task_factory = Async::TaskFactory(/* N_WORKERS = */ 3);
+    auto task_factory = Async::TaskFactory(/* N_WORKERS = */ 1, {});
     auto task_source = task_factory.value_source<int>();
     auto timing_source = task_factory.timer_source();
 

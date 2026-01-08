@@ -22,8 +22,7 @@ namespace Scheduler {
         [[nodiscard]] auto start() -> bool;
         [[nodiscard]] auto steal_job() -> std::optional<Job>;
 
-        auto queue(std::vector<Job> jobs) -> void;
-        auto queue(Job job) -> void;
+        auto queue(Job&& job) -> void;
     private:
         Context worker_context;
         StealWork steal_work;
