@@ -1,11 +1,14 @@
 #pragma once
 
 #include <memory>
+#include <vector>
 #include <functional>
 
 #include "scheduler/scheduler_factory.h"
+#include "scheduler/poll_source.h"
 #include "async_lib/task_io_source.h"
 #include "async_lib/task_timer_source.h"
+#include "async_lib/async_enumerable.h"
 #include "task_value_source.h"
 #include "task.h"
 
@@ -18,15 +21,17 @@ namespace Async {
     // THE SAME scheduler instance through all task instances to ensure that they are all executed on the same thread pool.
     class TaskFactory {
     public:
-        explicit TaskFactory(int n_workers);
+        explicit TaskFactory(int n_workers, std::vector<std::shared_ptr<Scheduler::IPollSource>>);
 
         template <typename T>
         [[nodiscard]] auto value_source() -> TaskValueSource<T>;
         [[nodiscard]] auto timer_source() -> TaskTimerSource;
         [[nodiscard]] auto io_source() -> TaskIOSource;
-            
         template <typename T>
         [[nodiscard]] auto create(std::function<T(void)> function) -> Task<T>;
+
+        template <typename T>
+        [[nodiscard]] auto create_enumerable(typename AsyncEnumerable<T>::Generator generator) -> Async::AsyncEnumerable<T>;
 
         template <typename T>
         [[nodiscard]] auto when_any(std::vector<Task<T>> tasks) -> Task<T>;
@@ -44,15 +49,22 @@ namespace Async {
 
 
 // Implementation
-inline Async::TaskFactory::TaskFactory(int n_workers) :
+inline Async::TaskFactory::TaskFactory(int n_workers, std::vector<std::shared_ptr<Scheduler::IPollSource>> poll_sources) :
     timing_poll_source(std::make_shared<Timing::PollSource>()),
-    io_poll_source(std::make_shared<IO::PollSource>()),
-    scheduler(Scheduler::create_scheduler(n_workers, { timing_poll_source, io_poll_source }))
-{}
+    io_poll_source(std::make_shared<IO::PollSource>())
+{
+    poll_sources.insert(poll_sources.begin(), { timing_poll_source, io_poll_source });
+    scheduler = Scheduler::create_scheduler(n_workers, poll_sources);
+}
 
 template <typename T>
 auto inline Async::TaskFactory::value_source() -> TaskValueSource<T> {
     return TaskValueSource<T>(*scheduler);
+}
+
+template <typename T>
+auto inline Async::TaskFactory::create_enumerable(typename AsyncEnumerable<T>::Generator generator) -> Async::AsyncEnumerable<T> {
+    return Async::AsyncEnumerable<T>(*scheduler, std::move(generator));
 }
 
 auto inline Async::TaskFactory::timer_source() -> TaskTimerSource {

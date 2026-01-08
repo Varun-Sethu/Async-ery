@@ -1,6 +1,5 @@
 #include <chrono>
 #include <thread>
-#include <vector>
 #include <stop_token>
 #include <utility>
 
@@ -15,9 +14,8 @@ Scheduler::Scheduler::Scheduler(unsigned int n_workers, const PollSources& poll_
     });
 }
 
-auto Scheduler::Scheduler::queue(Context ctx, Job job_fn) -> void { queue(ctx, std::vector<Job> { job_fn }); }
-auto Scheduler::Scheduler::queue(Context ctx, std::vector<Job> jobs) -> void {
-    this->worker_pool.queue(ctx, std::move(jobs));
+auto Scheduler::Scheduler::queue(Context ctx, Job&& job_fn) -> void {
+    this->worker_pool.queue(ctx, std::move(job_fn));
 }
 
 // begin_poll is the main poll loop, it will keep polling the poll sources and scheduling them in the future
@@ -32,13 +30,21 @@ auto Scheduler::Scheduler::begin_poll(const std::stop_token& stop_token, PollSou
     // NOLINTEND(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
 
     // initially... schedule all the poll sources for execution
-    auto schedule_poll_source = [&](auto time, auto& source) { poll_scheduler.schedule(time, std::move(source)); };
-    for (auto& source : poll_sources) { schedule_poll_source(std::chrono::milliseconds(0), source); }
+    auto schedule_poll_source = [&](auto time, auto& source) {
+        poll_scheduler.schedule(time, std::move(source));
+    };
+
+    for (auto& source : poll_sources) {
+        schedule_poll_source(std::chrono::milliseconds(0), source);
+    }
     
     // now continuously poll the poll sources, only running them when they are scheduled in the future
     while (!stop_token.stop_requested()) {
         for (auto& ready_poll : poll_scheduler.advance()) {
-            queue(Context::empty(), ready_poll->poll());
+            for (auto& job : ready_poll->poll()) {
+                this->worker_pool.queue(Context::empty(), std::move(job));
+            }
+
             schedule_poll_source(ready_poll->poll_frequency(), ready_poll);
         }
     }

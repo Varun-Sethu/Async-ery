@@ -27,7 +27,7 @@ auto delay_by(Async::TaskTimerSource& timer_source, std::chrono::milliseconds am
 }
 
 auto main() -> int {
-    auto task_factory = Async::TaskFactory(/* N_WORKERS = */ 3);
+    auto task_factory = Async::TaskFactory(/* N_WORKERS = */ 3, {});
     auto io_source = task_factory.io_source();
     auto timer_source = task_factory.timer_source();
     

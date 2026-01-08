@@ -8,7 +8,7 @@
 
 
 auto main() -> int {
-    auto task_factory = Async::TaskFactory(/* N_WORKERS = */ 3);
+    auto task_factory = Async::TaskFactory(/* N_WORKERS = */ 3, {});
     auto task_source_one = task_factory.value_source<int>();
     auto task_source_two = task_factory.value_source<int>();
 

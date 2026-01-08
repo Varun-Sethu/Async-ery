@@ -3,6 +3,7 @@
 #include <mutex>
 
 #include "task_value_source.h"
+#include "async_enumerable.h"
 #include "scheduler/scheduler_intf.h"
 #include "types.h"
 #include "timing/timing_poll_source.h"
@@ -18,6 +19,7 @@ namespace Async {
 
         // create creates a new task that is resolved after the specified duration
         auto after(std::chrono::milliseconds duration) -> Async::Task<Unit>;
+        auto periodic(std::chrono::milliseconds period) -> Async::AsyncEnumerable<Unit>;
 
     private:
         // Note:

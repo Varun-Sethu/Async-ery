@@ -12,9 +12,7 @@ namespace Scheduler {
     public:
         explicit WorkerPool(unsigned int n_workers);
 
-        auto queue(Context ctx, Job job) -> void;
-        auto queue(Context ctx, std::vector<Job> jobs) -> void;
-
+        auto queue(Context ctx, Job&& job) -> void;
     private:
         // find_new_work attempts to find a new job to work on, if no job is found it returns std::nullopt
         // this method is specifically used by Workers when they wish to find new work, it randomly evicts jobs

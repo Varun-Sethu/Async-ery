@@ -1,18 +1,5 @@
 project(timing)
 
-set(CMAKE_CXX_CLANG_TIDY clang-tidy-17 "-config-file=${CMAKE_SOURCE_DIR}/.clang-tidy")
-add_compile_options(-Wall 
-                    -Wextra
-                    -pedantic-errors
-                    -Wnon-virtual-dtor
-                    -Werror
-                    -Wconversion
-                    -Wdouble-promotion
-                    -Wnull-dereference
-                    -Wcast-align
-                    -Wuninitialized
-                    -Wsuggest-override
-                    -Wzero-as-null-pointer-constant)
 
 add_library(timing
     include/${PROJECT_NAME}/timing_poll_source.h

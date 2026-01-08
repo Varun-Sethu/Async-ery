@@ -45,7 +45,7 @@ auto concurrent_sum(Async::TaskFactory& factory, const size_t max_values_per_tas
 // Example demonstrating the use of the TaskFactory class to concurrently sum a range of numbers
 // from 1 to n using 10 worker threads.
 auto main() -> int {
-    auto factory = Async::TaskFactory(/* N_WORKERS = */ 10);
+    auto factory = Async::TaskFactory(/* N_WORKERS = */ 10, {});
     
     auto n = 100;
     auto max_values_per_task = size_t(10);

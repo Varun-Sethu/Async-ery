@@ -12,33 +12,30 @@
 
 Scheduler::WorkerPool::WorkerPool(unsigned int n_workers) {
     for (unsigned int i = 0; i < n_workers; i++) {
-        auto worker = JobWorker(Context(i), [this]() { return this->find_new_work(); });
-        workers.emplace_back(std::move(worker));
+        workers.emplace_back(
+            Context(i), 
+            [this]() { return this->find_new_work(); });
     }
 
     // start all the workers
     for (auto& worker : workers) {
         auto could_start = worker.start();
-        if (!could_start) {
-            assert(false && "Failed to start worker");
-        }
+        assert(could_start && "Failed to start worker");
     }
 }
 
-auto Scheduler::WorkerPool::queue(Context ctx, Job job) -> void { queue(ctx, std::vector<Job> { std::move(job) }); }
-auto Scheduler::WorkerPool::queue(Context ctx, std::vector<Job> jobs) -> void {
+auto Scheduler::WorkerPool::queue(Context ctx, Job&& job) -> void {
     auto worker_id = ctx.worker_id;
     if (worker_id.has_value()) {
         auto& worker = workers[worker_id.value()];
-        worker.queue(std::move(jobs));
+        worker.queue(std::move(job));
     } else {
-        for (auto& job : jobs) {
-            global_queue.enqueue(std::move(job));
-        }
+        global_queue.enqueue(std::move(job));
     }
 }
 
-
+// TODO: Change work allocation policy such that work is allocated to workers instead of a global queue
+//       this will allow for better load balancing and less contention over the global queue
 auto Scheduler::WorkerPool::find_new_work() -> std::optional<Job> {
     // check the global queue for any jobs
     if (auto job = global_queue.dequeue(); job.has_value()) {
