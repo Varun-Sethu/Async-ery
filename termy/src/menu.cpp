@@ -1,26 +1,25 @@
 #include "menu.h"
 #include "key.h"
 
-#include <algorithm>
-
 namespace Termy {
 
-Menu::Menu(std::vector<MenuItem> items, IKeyboardSource& keyboard_source, MenuColors colors)
+Menu::Menu(std::vector<MenuItem> items, MenuColors colors)
     : items_(std::move(items))
     , colors_(colors)
-{
-    keyboard_source.add_listener([this](Key key) {
-        if (key == Key::Up) {
-            move_up();
-        } else if (key == Key::Down) {
-            move_down();
-        }
-    });
+{}
+
+auto Menu::on_key_press(Key key) -> void {
+    if (key == Key::Up) {
+        move_menu_focus_up();
+    } else if (key == Key::Down) {
+        move_menu_focus_down();
+    }
 }
 
-auto Menu::render(Frame& frame) -> void
+auto Menu::render(Frame frame) -> void
 {
     auto item_width = width();
+    frame.set_content_width(static_cast<size_t>(item_width));
 
     for (size_t i = 0; i < items_.size(); ++i) {
         const auto is_focused = (i == focused_index_);
@@ -52,19 +51,14 @@ auto Menu::width() const -> int
     return max_len + HORIZONTAL_PADDING;
 }
 
-auto Menu::height() const -> int
-{
-    return static_cast<int>(items_.size());
-}
-
-auto Menu::move_up() -> void
+auto Menu::move_menu_focus_up() -> void
 {
     if (focused_index_ > 0) {
         --focused_index_;
     }
 }
 
-auto Menu::move_down() -> void
+auto Menu::move_menu_focus_down() -> void
 {
     if (focused_index_ < items_.size() - 1) {
         ++focused_index_;

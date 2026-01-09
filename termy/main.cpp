@@ -8,7 +8,7 @@
 
 #include "include/keyboard_poll_source.h"
 #include "include/menu.h"
-#include "include/frame.h"
+#include "include/window.h"
 
 using namespace std::chrono_literals;
 
@@ -18,13 +18,18 @@ void signal_handler(int) {
     running = false;
 }
 
-int main() {
-    // Set up signal handler for Ctrl+C
+auto main() -> int {
     std::signal(SIGINT, signal_handler);
 
     auto keyboard_poll_source = std::make_shared<Termy::KeyboardPollSource>();
-    auto task_factory = Async::TaskFactory(/* N_WORKERS = */ 1, { keyboard_poll_source });
+    auto task_factory = Async::TaskFactory(1, { keyboard_poll_source });
     auto timer_source = task_factory.timer_source();
+    auto colors = Termy::MenuColors{
+        .focused_fg = Termy::Color::Black,
+        .focused_bg = Termy::Color::Cyan,
+        .unfocused_fg = Termy::Color::White,
+        .unfocused_bg = Termy::Color::Default
+    };
 
     auto menu_items = std::vector<Termy::MenuItem>{
         {"Option 1", "Option 1: Chicken nuggies?"},
@@ -33,36 +38,37 @@ int main() {
         {"Exit", "Please dont exit the application :c"}
     };
 
-    auto colors = Termy::MenuColors{
-        .focused_fg = Termy::Color::Black,
-        .focused_bg = Termy::Color::Cyan,
-        .unfocused_fg = Termy::Color::White,
-        .unfocused_bg = Termy::Color::Default
+    auto menu_two_items = std::vector<Termy::MenuItem>{
+        {"Tomato A", "Option A: Chicken nuggies?"},
+        {"Tomato B", "Option B: Tomatoes and potatoes, whats the diff?"},
+        {"Tomato C", "Option C: The least epic option"},
+        {"Exit", "Please dont exit the application :c"}
     };
 
-    auto menu = Termy::Menu(menu_items, *keyboard_poll_source, colors);
+    auto menu_two = Termy::Menu(menu_two_items, colors);
+    auto menu = Termy::Menu(menu_items, colors);
 
-    // Clear screen and hide cursor
+    auto window = Termy::Window(80, 10, {
+        {.component = menu, .percentage = 0.5f},
+        {.component = menu_two, .percentage = 0.5f}
+    }, *keyboard_poll_source);
+
     std::cout << "\033[2J";
     std::cout << "\033[?25l";
 
-    // Render loop at ~30fps (33ms per frame)
-    timer_source.periodic(33ms).for_each([&menu](auto) {
-        // Move cursor to top-left
+    timer_source.periodic(33ms).for_each([&window](auto) {
         std::cout << "\033[1;1H";
 
-        auto frame = Termy::Frame();
-        menu.render(frame);
-        std::cout << frame.to_string();
+        window.clear();
+        window.redraw_panes();
+        std::cout << window.to_string();
         std::cout.flush();
     });
 
-    // Keep main alive until Ctrl+C
     while (running) {
         std::this_thread::sleep_for(100ms);
     }
 
-    // Cleanup: show cursor and reset colors
     std::cout << "\033[?25h";
     std::cout << "\033[0m";
     std::cout << "\033[2J";

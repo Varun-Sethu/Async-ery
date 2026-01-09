@@ -7,9 +7,10 @@ add_executable(termy
     src/frame.cpp
     src/menu.cpp
     src/keyboard_poll_source.cpp
+    src/window.cpp
 )
 
-target_link_libraries(termy PRIVATE async_lib)
+target_link_libraries(termy PRIVATE async_lib fmt::fmt)
 
 target_include_directories(termy PRIVATE
     ${CMAKE_SOURCE_DIR}/include
@@ -19,6 +20,13 @@ target_include_directories(termy PRIVATE
 set_property(TARGET termy PROPERTY CXX_STANDARD 20)
 
 include(FetchContent)
+
+FetchContent_Declare(
+    fmt
+    URL https://github.com/fmtlib/fmt/archive/refs/tags/10.2.1.zip
+)
+FetchContent_MakeAvailable(fmt)
+
 FetchContent_Declare(
     googletest
     URL https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip
@@ -36,8 +44,10 @@ enable_testing()
 add_executable(termy_tests
     test/test_main.cpp
     test/menu_test.cpp
+    test/window_test.cpp
     src/frame.cpp
     src/menu.cpp
+    src/window.cpp
 )
 
 target_include_directories(termy_tests PRIVATE
@@ -48,6 +58,7 @@ target_include_directories(termy_tests PRIVATE
 
 target_link_libraries(termy_tests PRIVATE
     async_lib
+    fmt::fmt
     GTest::gtest_main
 )
 

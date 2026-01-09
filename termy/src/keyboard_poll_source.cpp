@@ -1,5 +1,6 @@
 #include "keyboard_poll_source.h"
 
+#include <algorithm>
 #include <array>
 #include <unistd.h>
 #include <fcntl.h>
@@ -28,9 +29,15 @@ KeyboardPollSource::~KeyboardPollSource()
     fcntl(STDIN_FILENO, F_SETFL, orig_flags & ~O_NONBLOCK);
 }
 
-auto KeyboardPollSource::add_listener(const KeyListener& listener) -> void
-{
-    listeners_.push_back(listener);
+auto KeyboardPollSource::add_listener(IKeyboardListener& listener) -> void {
+    listeners_.push_back(&listener);
+}
+
+auto KeyboardPollSource::remove_listener(IKeyboardListener& listener) -> void {
+    listeners_.erase(
+        std::remove(listeners_.begin(), listeners_.end(), &listener),
+        listeners_.end()
+    );
 }
 
 auto KeyboardPollSource::poll_frequency() -> std::chrono::milliseconds
@@ -46,6 +53,9 @@ auto KeyboardPollSource::poll() -> std::vector<Scheduler::Job>
     if (num_bytes == 1) {
         if (byte_buffer[0] == '\n' || byte_buffer[0] == '\r') {
             return create_listener_notification_jobs(Key::Enter);
+        }
+        if (byte_buffer[0] == '\033') {
+            return create_listener_notification_jobs(Key::Escape);
         }
     }
 
@@ -66,11 +76,18 @@ auto KeyboardPollSource::poll() -> std::vector<Scheduler::Job>
     return {};
 }
 
-auto KeyboardPollSource::create_listener_notification_jobs(Key key) -> std::vector<Scheduler::Job>
-{
+auto KeyboardPollSource::create_listener_notification_jobs(Key key) -> std::vector<Scheduler::Job> {
     auto jobs = std::vector<Scheduler::Job>();
-    for (const auto& listener : listeners_) {
-        jobs.emplace_back([listener, key](auto) { listener(key); });
+    for (auto* listener : listeners_) {
+        auto notify = [listener, key](auto) { listener->on_key_press(key); };
+
+        // std::function uses Small Buffer Optimization (SBO) to avoid heap allocation
+        // for small callables. The threshold is implementation-specific:
+        // libstdc++ (GCC): 16 bytes, libc++ (Clang): 24 bytes, MSVC: ~32 bytes.
+        // We use 16 as the conservative minimum across all major implementations.
+        static_assert(sizeof(notify) <= 16, "Lambda exceeds std::function SBO threshold");
+
+        jobs.emplace_back(std::move(notify));
     }
     return jobs;
 }

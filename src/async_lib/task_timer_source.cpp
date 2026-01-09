@@ -1,10 +1,12 @@
 #include <memory>
 #include <chrono>
+#include <optional>
 
 #include "async_lib/task.h"
 #include "async_lib/task_value_source.h"
 #include "async_lib/types.h"
 #include "async_lib/task_timer_source.h"
+#include "async_lib/async_enumerable.h"
 
 auto Async::TaskTimerSource::after(std::chrono::milliseconds duration) -> Async::Task<Unit> {
     auto value_source = std::make_shared<Async::TaskValueSource<Unit>>(scheduler);
