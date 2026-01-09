@@ -31,7 +31,7 @@ auto main() -> int {
     auto io_source = task_factory.io_source();
     auto timer_source = task_factory.timer_source();
     
-    auto file = std::unique_ptr<FILE, decltype(&fclose)>(fopen("tests/io.txt", "r"), &fclose);
+    auto file = std::unique_ptr<FILE, int(*)(FILE*)>(fopen("tests/io.txt", "r"), &fclose);
     auto io_req = Async::IO::ReadRequest(Async::IO::Size(1024), Async::IO::Offset(0));
     unused(auto _) = io_source.read(file.get(), io_req)
              .map<Async::Unit>(read_file_body)

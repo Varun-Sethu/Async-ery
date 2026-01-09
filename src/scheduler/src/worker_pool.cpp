@@ -19,7 +19,7 @@ Scheduler::WorkerPool::WorkerPool(unsigned int n_workers) {
 
     // start all the workers
     for (auto& worker : workers) {
-        auto could_start = worker.start();
+        [[maybe_unused]] auto could_start = worker.start();
         assert(could_start && "Failed to start worker");
     }
 }

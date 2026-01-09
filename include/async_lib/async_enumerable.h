@@ -20,15 +20,15 @@ namespace Async {
         {
         }
 
-        auto for_each(std::function<void(T)> fn) -> auto {
+        auto for_each(std::function<void(T)> func) -> auto {
             std::optional<Async::Task<T>> task = generate_next();
             if (!task.has_value()) {
                 return Async::Task<Async::Unit>::immediate_task(scheduler, Async::Unit{});
             }
 
-            return task->template bind<Async::Unit>([this, fn](T value) {
-                fn(value);
-                return for_each(fn);
+            return task->template bind<Async::Unit>([this, func](T value) {
+                func(value);
+                return for_each(func);
             });
         }
 
