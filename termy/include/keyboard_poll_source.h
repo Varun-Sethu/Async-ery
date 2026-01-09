@@ -11,20 +11,37 @@
 
 namespace Termy {
 
-class IKeyboardSource {
+// IKeyboardListener can be attached to a keyboard poll source to receive key press events.
+// We extract this into its own interface instead of its own function as it allows for a listener
+// to be removed from some poll source.
+class IKeyboardListener {
 public:
-    using KeyListener = std::function<void(Key)>;
+    virtual ~IKeyboardListener() = default;
 
-    virtual ~IKeyboardSource() = default;
-    virtual auto add_listener(const KeyListener& listener) -> void = 0;
+    // on_key_press is invoked by the keyboard poll source whenever there is a
+    // key update.
+    virtual auto on_key_press(Key key) -> void = 0;
 };
 
+// IKeyboardSource is an interface for a keyboard source that can be polled for key presses.
+// Listeners can be added and removed from the source.
+class IKeyboardSource {
+public:
+    virtual ~IKeyboardSource() = default;
+
+    virtual auto add_listener(IKeyboardListener& listener) -> void = 0;
+    virtual auto remove_listener(IKeyboardListener& listener) -> void = 0;
+};
+
+// KeyboardPollSource is a concrete implementation of IKeyboardSource that polls the keyboard for key presses.
+// It uses the termios library to enable raw mode and disable echo.
 class KeyboardPollSource : public Scheduler::IPollSource, public IKeyboardSource {
 public:
     KeyboardPollSource();
     ~KeyboardPollSource() override;
 
-    auto add_listener(const IKeyboardSource::KeyListener& listener) -> void override;
+    auto add_listener(IKeyboardListener& listener) -> void override;
+    auto remove_listener(IKeyboardListener& listener) -> void override;
 
     auto poll_frequency() -> std::chrono::milliseconds override;
     auto poll() -> std::vector<Scheduler::Job> override;
@@ -34,7 +51,7 @@ private:
 
     termios term_;
     termios original_term_;
-    std::vector<IKeyboardSource::KeyListener> listeners_;
+    std::vector<IKeyboardListener*> listeners_;
 };
 
 }

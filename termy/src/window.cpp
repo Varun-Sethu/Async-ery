@@ -1,16 +1,72 @@
 #include "window.h"
 #include "frame.h"
 
+#include <locale>
+#include <codecvt>
+
 #include <fmt/format.h>
 
 namespace Termy {
+namespace {
+    auto codepoint_to_utf8(uint32_t codepoint) -> std::string {
+        auto convert = std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t>();
+        return convert.to_bytes(codepoint);
+    }
+}
 
-Window::Window(size_t width, size_t height, std::vector<WindowPane> panes)
+Window::Window(size_t width, size_t height, std::vector<WindowPane> panes, IKeyboardSource& keyboard_source)
     : width_(width)
     , height_(height)
     , cells_(height, std::vector<Cell>(width))
     , panes_(std::move(panes))
 {
+    keyboard_source.add_listener(*this);
+}
+
+// operator for subscribing and responding to keyboard events
+// will be invoked by the keyboard source
+auto Window::on_key_press(Key key) -> void {
+    switch (pane_cursor_state_) {
+        case PaneCursorState::NotFocused:
+            return handle_key_press_when_no_pane_in_focus(key);
+        case PaneCursorState::Focused:
+            return handle_key_press_when_a_pane_is_in_focus(key);
+    }
+}
+
+// When the window is unfocused the LEFT+RIGHT keys will cycle through the panes
+// and pressing enter will select the currently hovered pane
+auto Window::handle_key_press_when_no_pane_in_focus(Key key) -> void {
+    switch (key) {
+        case Key::Right: {
+            // Progress to the next pane to focus on
+            auto next_pane = (pane_cursor_ + 1) % panes_.size();
+            pane_cursor_ = next_pane;
+            break;
+        }
+        case Key::Left: {
+            auto previous_pane = (pane_cursor_ - 1 + panes_.size()) % panes_.size();
+            pane_cursor_ = previous_pane;
+            break;
+        }
+        case Key::Enter:
+            pane_cursor_state_ = PaneCursorState::Focused;
+            break;
+        default:
+            // Not handled
+            break;
+    }
+}
+
+// When the window is focused the class only responds to the escape
+// key. All other keys are forwarded to the currently focused pane
+auto Window::handle_key_press_when_a_pane_is_in_focus(Key key) -> void {
+    if (key == Key::Escape) {
+        pane_cursor_state_ = PaneCursorState::NotFocused;
+    } else {
+        // Forward the key press to the currently focussed pane
+        panes_[pane_cursor_].component.on_key_press(key);
+    }
 }
 
 auto Window::redraw_panes() -> void {
@@ -18,7 +74,8 @@ auto Window::redraw_panes() -> void {
 
     auto current_col = size_t{0};
 
-    for (auto& pane : panes_) {
+    for (auto i = size_t{0}; i < panes_.size(); ++i) {
+        auto& pane = panes_[i];
         auto allocated_width = static_cast<size_t>(static_cast<float>(width_) * pane.percentage);
         auto remaining_width = width_ - current_col;
         auto pane_width = std::min(allocated_width, remaining_width);
@@ -27,7 +84,17 @@ auto Window::redraw_panes() -> void {
         }
 
         auto span = Span2D<Cell>::from_vector(cells_, current_col, pane_width);
-        pane.component.render(Frame(span));
+
+        auto pane_cursor_is_at_pane = (i == pane_cursor_);
+        auto border_color = std::optional<Color>{std::nullopt};
+        if (pane_cursor_is_at_pane) {
+            border_color = (pane_cursor_state_ == PaneCursorState::Focused)
+                ? Color::BrightWhite
+                : Color::BrightBlack;
+        }
+
+        auto frame = Frame(span, border_color);
+        pane.component.render(frame);
         current_col += pane_width;
     }
 }
@@ -63,7 +130,7 @@ auto Window::to_string() const -> std::string {
                 current_text_colour_fg = cell.fg;
                 current_text_colour_bg = cell.bg;
             }
-            coloured_text_block += cell.ch;
+            coloured_text_block += codepoint_to_utf8(cell.ch);
         }
 
         result += produce_coloured_text_ansi(current_text_colour_fg, current_text_colour_bg, coloured_text_block);

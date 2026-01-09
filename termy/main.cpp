@@ -18,7 +18,7 @@ void signal_handler(int) {
     running = false;
 }
 
-int main() {
+auto main() -> int {
     std::signal(SIGINT, signal_handler);
 
     auto keyboard_poll_source = std::make_shared<Termy::KeyboardPollSource>();
@@ -45,13 +45,13 @@ int main() {
         {"Exit", "Please dont exit the application :c"}
     };
 
-    auto menu_two = Termy::Menu(menu_two_items, *keyboard_poll_source, colors);
-    auto menu = Termy::Menu(menu_items, *keyboard_poll_source, colors);
+    auto menu_two = Termy::Menu(menu_two_items, colors);
+    auto menu = Termy::Menu(menu_items, colors);
 
     auto window = Termy::Window(80, 10, {
         {.component = menu, .percentage = 0.5f},
         {.component = menu_two, .percentage = 0.5f}
-    });
+    }, *keyboard_poll_source);
 
     std::cout << "\033[2J";
     std::cout << "\033[?25l";
