@@ -61,7 +61,7 @@ TEST(MenuNavigationTest, MoveDownChangesFocusedItem) {
         {"Option C", ""}
     });
 
-    menu.on_key_press(Key::Down);
+    menu.on_special_key_press(Key::Down);
     menu.render(frame);
 
     auto expected = TextBorder::PaddedContent(12, 5, {
@@ -83,8 +83,8 @@ TEST(MenuNavigationTest, MoveUpChangesFocusedItem) {
     });
 
     // First assert the state after pressing down a few times
-    menu.on_key_press(Key::Down);
-    menu.on_key_press(Key::Down);
+    menu.on_special_key_press(Key::Down);
+    menu.on_special_key_press(Key::Down);
     menu.render(frame);
 
     auto expected_after_downs = TextBorder::PaddedContent(12, 5, {
@@ -97,7 +97,7 @@ TEST(MenuNavigationTest, MoveUpChangesFocusedItem) {
 
     // Now press up and assert the new state, this should
     // have moved the focussed item to the middle
-    menu.on_key_press(Key::Up);
+    menu.on_special_key_press(Key::Up);
     menu.render(frame);
 
     auto expected = TextBorder::PaddedContent(12, 5, {
@@ -117,7 +117,7 @@ TEST(MenuNavigationTest, MoveUpAtFirstItemDoesNothing) {
         {"Option B", ""}
     });
 
-    menu.on_key_press(Key::Up);
+    menu.on_special_key_press(Key::Up);
     menu.render(frame);
 
     auto expected = TextBorder::PaddedContent(12, 4, {
@@ -136,9 +136,9 @@ TEST(MenuNavigationTest, MoveDownAtLastItemDoesNothing) {
         {"Option B", ""}
     });
 
-    menu.on_key_press(Key::Down);
-    menu.on_key_press(Key::Down);
-    menu.on_key_press(Key::Down);
+    menu.on_special_key_press(Key::Down);
+    menu.on_special_key_press(Key::Down);
+    menu.on_special_key_press(Key::Down);
     menu.render(frame);
 
     auto expected = TextBorder::PaddedContent(12, 4, {

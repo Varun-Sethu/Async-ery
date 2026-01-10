@@ -18,9 +18,13 @@ class IKeyboardListener {
 public:
     virtual ~IKeyboardListener() = default;
 
-    // on_key_press is invoked by the keyboard poll source whenever there is a
-    // key update.
-    virtual auto on_key_press(Key key) -> void = 0;
+    // on_special_key_press is invoked by the keyboard poll source whenever a
+    // special key (arrows, enter, escape, etc.) is pressed.
+    virtual auto on_special_key_press(Key key) -> void = 0;
+
+    // on_char_key_press is invoked when a printable character is typed.
+    // Default implementation does nothing - override in components that need text input.
+    virtual auto on_char_key_press(char c) -> void { (void)c; }
 };
 
 // IKeyboardSource is an interface for a keyboard source that can be polled for key presses.
@@ -47,7 +51,8 @@ public:
     auto poll() -> std::vector<Scheduler::Job> override;
 
 private:
-    auto create_listener_notification_jobs(Key key) -> std::vector<Scheduler::Job>;
+    auto create_special_key_listener_notification_jobs(Key key) -> std::vector<Scheduler::Job>;
+    auto create_char_key_listener_notification_jobs(char c) -> std::vector<Scheduler::Job>;
 
     termios term_;
     termios original_term_;

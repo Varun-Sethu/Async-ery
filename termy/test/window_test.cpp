@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "window.h"
+#include "frame.h"
 #include "menu.h"
 #include "key.h"
 #include "mocks/mock_keyboard_source.h"
@@ -8,6 +9,7 @@
 
 using Termy::Color;
 using Termy::Key;
+using Termy::ComponentAlignment;
 using Termy::MockKeyboardSource;
 using Termy::Testing::TextHighlight;
 using Termy::Testing::TextBorder;
@@ -26,7 +28,7 @@ TEST(WindowTest, RendersSinglePaneFullWidth) {
     auto keyboard = MockKeyboardSource();
     auto menu = Termy::Menu(std::vector<Termy::MenuItem>{{"Item", ""}});
     auto window = Termy::Window(8, 3, {
-        {.component = menu, .percentage = 1.0f}
+        {.component = menu, .percentage = 1.0f, .alignment = ComponentAlignment::Center}
     }, keyboard);
 
     window.redraw_panes();
@@ -42,8 +44,8 @@ TEST(WindowTest, RendersTwoPanesSideBySide) {
     auto menu_left = Termy::Menu(std::vector<Termy::MenuItem>{{"L", ""}});
     auto menu_right = Termy::Menu(std::vector<Termy::MenuItem>{{"R", ""}});
     auto window = Termy::Window(10, 3, {
-        {.component = menu_left, .percentage = 0.5f},
-        {.component = menu_right, .percentage = 0.5f}
+        {.component = menu_left, .percentage = 0.5f, .alignment = ComponentAlignment::Center},
+        {.component = menu_right, .percentage = 0.5f, .alignment = ComponentAlignment::Center}
     }, keyboard);
 
     window.redraw_panes();
@@ -60,8 +62,8 @@ TEST(WindowTest, CalculatesPercentageWidthsCorrectly) {
     auto menu_left = Termy::Menu(std::vector<Termy::MenuItem>{{"X", ""}});
     auto menu_right = Termy::Menu(std::vector<Termy::MenuItem>{{"Y", ""}});
     auto window = Termy::Window(10, 3, {
-        {.component = menu_left, .percentage = 0.5f},
-        {.component = menu_right, .percentage = 0.5f}
+        {.component = menu_left, .percentage = 0.5f, .alignment = ComponentAlignment::Center},
+        {.component = menu_right, .percentage = 0.5f, .alignment = ComponentAlignment::Center}
     }, keyboard);
 
     window.redraw_panes();
@@ -77,7 +79,7 @@ TEST(WindowTest, CentersContentInWiderPane) {
     auto keyboard = MockKeyboardSource();
     auto menu = Termy::Menu(std::vector<Termy::MenuItem>{{"Hi", ""}});
     auto window = Termy::Window(10, 3, {
-        {.component = menu, .percentage = 1.0f}
+        {.component = menu, .percentage = 1.0f, .alignment = ComponentAlignment::Center}
     }, keyboard);
 
     window.redraw_panes();
@@ -95,7 +97,7 @@ TEST(WindowTest, MultipleRowsRenderedCorrectly) {
         {"Two", ""}
     });
     auto window = Termy::Window(7, 4, {
-        {.component = menu, .percentage = 1.0f}
+        {.component = menu, .percentage = 1.0f, .alignment = ComponentAlignment::Center}
     }, keyboard);
 
     window.redraw_panes();
@@ -111,7 +113,7 @@ TEST(WindowTest, TruncatesContentThatExceedsPaneWidth) {
     auto keyboard = MockKeyboardSource();
     auto menu = Termy::Menu(std::vector<Termy::MenuItem>{{"Hello", ""}});
     auto window = Termy::Window(6, 3, {
-        {.component = menu, .percentage = 1.0f}
+        {.component = menu, .percentage = 1.0f, .alignment = ComponentAlignment::Center}
     }, keyboard);
 
     window.redraw_panes();
@@ -128,9 +130,9 @@ TEST(WindowFocusTest, ArrowKeysMoveCandidateAndEnterFocuses) {
     auto menu_b = Termy::Menu(std::vector<Termy::MenuItem>{{"B", ""}});
     auto menu_c = Termy::Menu(std::vector<Termy::MenuItem>{{"C", ""}});
     auto window = Termy::Window(15, 3, {
-        {.component = menu_a, .percentage = 0.34f},
-        {.component = menu_b, .percentage = 0.34f},
-        {.component = menu_c, .percentage = 0.34f}
+        {.component = menu_a, .percentage = 0.34f, .alignment = ComponentAlignment::Center},
+        {.component = menu_b, .percentage = 0.34f, .alignment = ComponentAlignment::Center},
+        {.component = menu_c, .percentage = 0.34f, .alignment = ComponentAlignment::Center}
     }, keyboard);
 
     auto HOVERING_OVER = [&](const std::string& item) { return CandidateBorder.ColouredBorder(5, { item }); };
@@ -182,8 +184,8 @@ TEST(WindowFocusTest, KeysOnlyForwardedToFocusedPane) {
         {"R1", ""}, {"R2", ""}, {"R3", ""}
     });
     auto window = Termy::Window(12, 5, {
-        {.component = menu_left, .percentage = 0.5f},
-        {.component = menu_right, .percentage = 0.5f}
+        {.component = menu_left, .percentage = 0.5f, .alignment = ComponentAlignment::Center},
+        {.component = menu_right, .percentage = 0.5f, .alignment = ComponentAlignment::Center}
     }, keyboard);
 
     using Items = std::initializer_list<std::string>;

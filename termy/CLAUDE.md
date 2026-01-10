@@ -143,3 +143,5 @@ timer_source.periodic(33ms).for_each([&](auto) {
 - GoogleTest framework
 - MockKeyboardSource for simulating input without terminal
 - Tests cover: menu rendering, navigation, window layout, pane percentages
+- When writing tests, attempt to use the testing utils to create "mock" layouts
+    - read window_test.cpp and menu_test.cpp for information.

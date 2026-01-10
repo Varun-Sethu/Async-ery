@@ -25,7 +25,7 @@ Window::Window(size_t width, size_t height, std::vector<WindowPane> panes, IKeyb
 
 // operator for subscribing and responding to keyboard events
 // will be invoked by the keyboard source
-auto Window::on_key_press(Key key) -> void {
+auto Window::on_special_key_press(Key key) -> void {
     switch (pane_cursor_state_) {
         case PaneCursorState::NotFocused:
             return handle_key_press_when_no_pane_in_focus(key);
@@ -65,7 +65,13 @@ auto Window::handle_key_press_when_a_pane_is_in_focus(Key key) -> void {
         pane_cursor_state_ = PaneCursorState::NotFocused;
     } else {
         // Forward the key press to the currently focussed pane
-        panes_[pane_cursor_].component.on_key_press(key);
+        panes_[pane_cursor_].component.on_special_key_press(key);
+    }
+}
+
+auto Window::on_char_key_press(char c) -> void {
+    if (pane_cursor_state_ == PaneCursorState::Focused) {
+        panes_[pane_cursor_].component.on_char_key_press(c);
     }
 }
 
@@ -83,7 +89,7 @@ auto Window::redraw_panes() -> void {
             continue;
         }
 
-        auto span = Span2D<Cell>::from_vector(cells_, current_col, pane_width);
+        auto span = TextGridSpan::from_grid(cells_, current_col, pane_width);
 
         auto pane_cursor_is_at_pane = (i == pane_cursor_);
         auto border_color = std::optional<Color>{std::nullopt};
@@ -93,7 +99,7 @@ auto Window::redraw_panes() -> void {
                 : Color::BrightBlack;
         }
 
-        auto frame = Frame(span, border_color);
+        auto frame = Frame(span, border_color, pane.alignment);
         pane.component.render(frame);
         current_col += pane_width;
     }

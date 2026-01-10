@@ -10,7 +10,7 @@
 
 #include "color.h"
 #include "frame.h"
-#include "span_2d.h"
+#include "text_grid.h"
 #include "window.h"
 
 namespace Termy::Testing {
@@ -19,6 +19,23 @@ namespace {
     auto codepoint_to_utf8(char32_t codepoint) -> std::string {
         auto convert = std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t>();
         return convert.to_bytes(codepoint);
+    }
+
+    auto visual_length(const std::string& text) -> size_t {
+        size_t length = 0;
+        bool in_escape = false;
+        for (char c : text) {
+            if (c == '\x1B') {
+                in_escape = true;
+            } else if (in_escape) {
+                if (c == 'm') {
+                    in_escape = false;
+                }
+            } else {
+                length++;
+            }
+        }
+        return length;
     }
 
     auto produce_coloured_text_ansi(Color fg, Color bg, const std::string& text) -> std::string {
@@ -101,6 +118,12 @@ public:
         , cells_(height, std::vector<Cell>(width))
     {}
 
+    TestFrame(size_t width, size_t height, TextGrid cells)
+        : width_(width)
+        , height_(height)
+        , cells_(std::move(cells))
+    {}
+
     auto to_string() const -> std::string {
         auto result = std::string{};
 
@@ -127,15 +150,18 @@ public:
         return result;
     }
 
-    auto create_termy_frame(std::optional<Color> border_color = std::nullopt) -> Frame {
-        auto span = Span2D<Cell>::from_vector(cells_, 0, width_);
-        return Frame(span, border_color);
+    auto create_termy_frame(
+        std::optional<Color> border_color = std::nullopt,
+        ComponentAlignment alignment = ComponentAlignment::Center
+    ) -> Frame {
+        auto span = TextGridSpan::from_grid(cells_, 0, width_);
+        return Frame(span, border_color, alignment);
     }
 
 private:
     size_t width_;
     size_t height_;
-    std::vector<std::vector<Cell>> cells_;
+    TextGrid cells_;
 };
 
 class TextHighlight {
@@ -202,7 +228,12 @@ public:
         lines.push_back(std::string(width, ' '));
 
         for (const auto& line : content_lines) {
-            lines.push_back(" " + line + " ");
+            auto padded_line = " " + line + " ";
+            auto vis_len = visual_length(padded_line);
+            if (vis_len < width) {
+                padded_line += std::string(width - vis_len, ' ');
+            }
+            lines.push_back(padded_line);
         }
 
         auto remaining_rows = height - content_lines.size() - 2;

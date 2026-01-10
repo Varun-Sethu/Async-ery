@@ -6,6 +6,7 @@ add_executable(termy
     main.cpp
     src/frame.cpp
     src/menu.cpp
+    src/text_box.cpp
     src/keyboard_poll_source.cpp
     src/window.cpp
 )
@@ -45,8 +46,10 @@ add_executable(termy_tests
     test/test_main.cpp
     test/menu_test.cpp
     test/window_test.cpp
+    test/text_box_test.cpp
     src/frame.cpp
     src/menu.cpp
+    src/text_box.cpp
     src/window.cpp
 )
 

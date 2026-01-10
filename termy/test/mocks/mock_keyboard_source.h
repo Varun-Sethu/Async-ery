@@ -23,7 +23,7 @@ public:
 
     auto simulate_key(Key key) -> void {
         for (auto* listener : listeners_) {
-            listener->on_key_press(key);
+            listener->on_special_key_press(key);
         }
     }
 

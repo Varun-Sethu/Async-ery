@@ -28,7 +28,7 @@ public:
     // Implementation details for the IWindowComponent interface.
     // These methods allow Menu to be used within a Window.
     auto render(Frame frame) -> void override;
-    auto on_key_press(Key key) -> void override;
+    auto on_special_key_press(Key key) -> void override;
 
 private:
     auto move_menu_focus_up() -> void;

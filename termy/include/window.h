@@ -4,18 +4,12 @@
 #include <vector>
 
 #include "color.h"
+#include "frame.h"
+#include "text_grid.h"
 #include "window_component.h"
 #include "keyboard_poll_source.h"
 
 namespace Termy {
-
-// Cell represents a single character in the terminal window.
-// The window operates over a 2D grid of cells.
-struct Cell {
-    char32_t ch = U' ';
-    Color fg = Color::Default;
-    Color bg = Color::Default;
-};
 
 // WindowPane represents a single pane in the terminal window.
 // Each pane has an associated component and a percentage of the window's width.
@@ -23,6 +17,7 @@ struct Cell {
 struct WindowPane {
     IWindowComponent& component;
     float percentage;
+    ComponentAlignment alignment;
 };
 
 // Window takes a collection of panes and renders them. Each pane is given the percentage of the window's width.
@@ -51,7 +46,8 @@ public:
     auto clear() -> void;
 
     // Interface implementation for IKeyboardListener
-    auto on_key_press(Key key) -> void override;
+    auto on_special_key_press(Key key) -> void override;
+    auto on_char_key_press(char c) -> void override;
 
 private:
     // Panes can either be focused or not focused. If a pane is not in focus
@@ -68,7 +64,7 @@ private:
 
     size_t width_;
     size_t height_;
-    std::vector<std::vector<Cell>> cells_;
+    TextGrid cells_;
     std::vector<WindowPane> panes_;
 
     // The pane_cursor_ is the index of the pane that the user is currently interacting with.

@@ -2,8 +2,9 @@
 
 namespace Termy {
 
-Frame::Frame(Span2D<Cell> view, std::optional<Color> border_color)
+Frame::Frame(TextGridSpan view, std::optional<Color> border_color, ComponentAlignment alignment)
     : view_(view)
+    , alignment_(alignment)
     , frame_content_row_start_(1)
     , frame_content_col_start_(1)
     , frame_content_max_width_((view.width >= 2) ? view.width - 2 : 0)
@@ -33,7 +34,12 @@ auto Frame::write(
         return;
     }
 
-    auto left_padding = (frame_content_max_width_ > content_width_) ? (frame_content_max_width_ - content_width_) / 2 : size_t{0};
+    auto left_padding = size_t{0};
+    if (alignment_ == ComponentAlignment::Center) {
+        left_padding = (frame_content_max_width_ > content_width_)
+            ? (frame_content_max_width_ - content_width_) / 2
+            : size_t{0};
+    }
     auto fg_color = fg.value_or(Color::Default);
     auto bg_color = bg.value_or(Color::Default);
 
@@ -58,6 +64,9 @@ auto Frame::newline() -> void {
     ++frame_content_row_cursor_;
     frame_content_col_cursor_ = 0;
 }
+
+auto Frame::content_max_width() const -> size_t { return frame_content_max_width_; }
+auto Frame::content_max_height() const -> size_t { return frame_content_max_height_; }
 
 auto Frame::draw_border(Color color) -> void {
     constexpr auto TOP_LEFT = U'┌';
