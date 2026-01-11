@@ -1,5 +1,4 @@
 #include <iostream>
-#include <chrono>
 #include <atomic>
 #include <csignal>
 #include <thread>
@@ -7,7 +6,9 @@
 #include "async_lib/task_factory.h"
 
 #include "include/keyboard_poll_source.h"
+#include "include/frame.h"
 #include "include/menu.h"
+#include "include/text_box.h"
 #include "include/window.h"
 
 using namespace std::chrono_literals;
@@ -48,9 +49,23 @@ auto main() -> int {
     auto menu_two = Termy::Menu(menu_two_items, colors);
     auto menu = Termy::Menu(menu_items, colors);
 
-    auto window = Termy::Window(80, 10, {
-        {.component = menu, .percentage = 0.5f},
-        {.component = menu_two, .percentage = 0.5f}
+    auto text_box_colors = Termy::TextBoxColors{
+        .text_fg = Termy::Color::White,
+        .text_bg = Termy::Color::Default,
+        .cursor_fg = Termy::Color::Black,
+        .cursor_bg = Termy::Color::Cyan
+    };
+    auto text_box = Termy::TextBox(
+        "helloooooooooooooooooooooooo\n"
+        "oooooooooooooooooooooo\n"
+        "ooo",
+        text_box_colors
+    );
+
+    auto window = Termy::Window(80, 12, {
+        {.component = menu, .percentage = 0.25f, .alignment = Termy::ComponentAlignment::Center},
+        {.component = text_box, .percentage = 0.5f, .alignment = Termy::ComponentAlignment::Left},
+        {.component = menu_two, .percentage = 0.25f, .alignment = Termy::ComponentAlignment::Center}
     }, *keyboard_poll_source);
 
     std::cout << "\033[2J";

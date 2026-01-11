@@ -4,14 +4,17 @@
 #include <optional>
 
 #include "color.h"
-#include "span_2d.h"
-#include "window.h"
+#include "text_grid.h"
 
 namespace Termy {
+enum class ComponentAlignment {
+    Left,
+    Center
+};
 
 class Frame {
 public:
-    Frame(Span2D<Cell> view, std::optional<Color> border_color);
+    Frame(TextGridSpan view, std::optional<Color> border_color, ComponentAlignment alignment = ComponentAlignment::Center);
 
     // Set the content width of the frame. This will adjust the width of the frame to the specified value.
     // If the specified width is greater than the view's width, the frame will be resized to fit the content.
@@ -28,10 +31,16 @@ public:
     // rendered text.
     auto newline() -> void;
 
+    // content_max_width & content_max_height indicates the maximum width and height of the content within the frame.
+    // This is useful for determining the maximum width and height of the content within the frame.
+    [[nodiscard]] auto content_max_width() const -> size_t;
+    [[nodiscard]] auto content_max_height() const -> size_t;
+
 private:
     auto draw_border(Color color) -> void;
 
-    Span2D<Cell> view_;
+    TextGridSpan view_;
+    ComponentAlignment alignment_;
     size_t frame_content_row_cursor_ = 0;
     size_t frame_content_col_cursor_ = 0;
     size_t content_width_ = 0;

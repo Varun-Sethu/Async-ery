@@ -1,4 +1,6 @@
 #include "menu.h"
+
+#include <algorithm>
 #include "key.h"
 
 namespace Termy {
@@ -8,7 +10,7 @@ Menu::Menu(std::vector<MenuItem> items, MenuColors colors)
     , colors_(colors)
 {}
 
-auto Menu::on_key_press(Key key) -> void {
+auto Menu::on_special_key_press(Key key) -> void {
     if (key == Key::Up) {
         move_menu_focus_up();
     } else if (key == Key::Down) {
@@ -44,9 +46,7 @@ auto Menu::width() const -> int
     auto max_len = 0;
     for (const auto& item : items_) {
         auto len = static_cast<int>(item.label.length());
-        if (len > max_len) {
-            max_len = len;
-        }
+        max_len = std::max(len, max_len);
     }
     return max_len + HORIZONTAL_PADDING;
 }

@@ -28,7 +28,7 @@ TEST(MenuTest, RendersSingleItem) {
         MenuHighlight.Focused(" Item 1 ")
     });
 
-    EXPECT_EQ(test_frame.to_string(), expected);
+    EXPECT_FRAME_EQ(test_frame.to_string(), expected);
 }
 
 TEST(MenuTest, RendersMultipleItemsWithFocusOnFirst) {
@@ -48,7 +48,7 @@ TEST(MenuTest, RendersMultipleItemsWithFocusOnFirst) {
         MenuHighlight.Unfocused(" Option C ")
     });
 
-    EXPECT_EQ(test_frame.to_string(), expected);
+    EXPECT_FRAME_EQ(test_frame.to_string(), expected);
 }
 
 
@@ -61,7 +61,7 @@ TEST(MenuNavigationTest, MoveDownChangesFocusedItem) {
         {"Option C", ""}
     });
 
-    menu.on_key_press(Key::Down);
+    menu.on_special_key_press(Key::Down);
     menu.render(frame);
 
     auto expected = TextBorder::PaddedContent(12, 5, {
@@ -70,7 +70,7 @@ TEST(MenuNavigationTest, MoveDownChangesFocusedItem) {
         MenuHighlight.Unfocused(" Option C ")
     });
 
-    EXPECT_EQ(test_frame.to_string(), expected);
+    EXPECT_FRAME_EQ(test_frame.to_string(), expected);
 }
 
 TEST(MenuNavigationTest, MoveUpChangesFocusedItem) {
@@ -83,8 +83,8 @@ TEST(MenuNavigationTest, MoveUpChangesFocusedItem) {
     });
 
     // First assert the state after pressing down a few times
-    menu.on_key_press(Key::Down);
-    menu.on_key_press(Key::Down);
+    menu.on_special_key_press(Key::Down);
+    menu.on_special_key_press(Key::Down);
     menu.render(frame);
 
     auto expected_after_downs = TextBorder::PaddedContent(12, 5, {
@@ -93,11 +93,11 @@ TEST(MenuNavigationTest, MoveUpChangesFocusedItem) {
         MenuHighlight.Focused(" Option C ")
     });
 
-    EXPECT_EQ(test_frame.to_string(), expected_after_downs);
+    EXPECT_FRAME_EQ(test_frame.to_string(), expected_after_downs);
 
     // Now press up and assert the new state, this should
     // have moved the focussed item to the middle
-    menu.on_key_press(Key::Up);
+    menu.on_special_key_press(Key::Up);
     menu.render(frame);
 
     auto expected = TextBorder::PaddedContent(12, 5, {
@@ -106,7 +106,7 @@ TEST(MenuNavigationTest, MoveUpChangesFocusedItem) {
         MenuHighlight.Unfocused(" Option C ")
     });
 
-    EXPECT_EQ(test_frame.to_string(), expected);
+    EXPECT_FRAME_EQ(test_frame.to_string(), expected);
 }
 
 TEST(MenuNavigationTest, MoveUpAtFirstItemDoesNothing) {
@@ -117,7 +117,7 @@ TEST(MenuNavigationTest, MoveUpAtFirstItemDoesNothing) {
         {"Option B", ""}
     });
 
-    menu.on_key_press(Key::Up);
+    menu.on_special_key_press(Key::Up);
     menu.render(frame);
 
     auto expected = TextBorder::PaddedContent(12, 4, {
@@ -125,7 +125,7 @@ TEST(MenuNavigationTest, MoveUpAtFirstItemDoesNothing) {
         MenuHighlight.Unfocused(" Option B ")
     });
 
-    EXPECT_EQ(test_frame.to_string(), expected);
+    EXPECT_FRAME_EQ(test_frame.to_string(), expected);
 }
 
 TEST(MenuNavigationTest, MoveDownAtLastItemDoesNothing) {
@@ -136,9 +136,9 @@ TEST(MenuNavigationTest, MoveDownAtLastItemDoesNothing) {
         {"Option B", ""}
     });
 
-    menu.on_key_press(Key::Down);
-    menu.on_key_press(Key::Down);
-    menu.on_key_press(Key::Down);
+    menu.on_special_key_press(Key::Down);
+    menu.on_special_key_press(Key::Down);
+    menu.on_special_key_press(Key::Down);
     menu.render(frame);
 
     auto expected = TextBorder::PaddedContent(12, 4, {
@@ -146,5 +146,5 @@ TEST(MenuNavigationTest, MoveDownAtLastItemDoesNothing) {
         MenuHighlight.Focused(" Option B ")
     });
 
-    EXPECT_EQ(test_frame.to_string(), expected);
+    EXPECT_FRAME_EQ(test_frame.to_string(), expected);
 }
