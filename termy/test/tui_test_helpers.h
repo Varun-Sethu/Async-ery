@@ -3,15 +3,28 @@
 #include <string>
 #include <vector>
 #include <initializer_list>
+#include <iostream>
 #include <locale>
 #include <codecvt>
 
+#include <gtest/gtest.h>
 #include <fmt/format.h>
 
 #include "color.h"
 #include "frame.h"
 #include "text_grid.h"
 #include "window.h"
+
+#define EXPECT_FRAME_EQ(actual, expected) \
+    { \
+        auto actual_str = (actual); \
+        auto expected_str = std::string(expected); \
+        if (actual_str != expected_str) { \
+            std::cerr << "\n\033[1;31m=== Actual ===\033[0m\n" << actual_str; \
+            std::cerr << "\033[1;32m=== Expected ===\033[0m\n" << expected_str << "\n"; \
+            EXPECT_TRUE(false) << "Frame content mismatch (see visual diff above)"; \
+        } \
+    }
 
 namespace Termy::Testing {
 
@@ -156,6 +169,14 @@ public:
     ) -> Frame {
         auto span = TextGridSpan::from_grid(cells_, 0, width_);
         return Frame(span, border_color, alignment);
+    }
+
+    auto clear() -> void {
+        for (auto& row : cells_) {
+            for (auto& cell : row) {
+                cell = Cell{};
+            }
+        }
     }
 
 private:

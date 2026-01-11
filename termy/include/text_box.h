@@ -25,7 +25,7 @@ public:
     auto set_text(std::string text) -> void;
 
     // Implementation details for the IWindowComponent interface.
-    // These methods allow Menu to be used within a Window.
+    // These methods allow TextBox to be used within a Window.
     auto render(Frame frame) -> void override;
     auto on_special_key_press(Key key) -> void override;
     auto on_char_key_press(char c) -> void override;

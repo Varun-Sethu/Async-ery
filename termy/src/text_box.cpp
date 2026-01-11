@@ -63,6 +63,7 @@ auto tokenize(std::string_view text) -> std::vector<Token> {
 // returns a tuple containing the line index and the column index on that line.
 auto map_buffer_cursor_to_screen_cursor(
     std::size_t buffer_cursor,
+    std::size_t frame_width,
     const std::vector<std::pair<size_t, std::string>>& wrapped_lines
 ) -> std::pair<std::size_t, std::size_t> {
     std::size_t line_index = 0;
@@ -71,6 +72,12 @@ auto map_buffer_cursor_to_screen_cursor(
         auto cursor_within_line = buffer_cursor >= line_start &&
                                   buffer_cursor < line_start + line_text.size();
         if (cursor_within_line) {
+            // Since all lines have an extra space at the end, if the cursor is outside the frame that contains this text box
+            // then we need to move it to the next line
+            if (buffer_cursor == frame_width) {
+                return { line_index + 1, 0 };
+            }
+
             return { line_index, buffer_cursor - line_start };
         }
 
@@ -164,7 +171,7 @@ auto TextBox::set_text(std::string text) -> void {
     };
 }
 
-// wrap_text will convert some provided text into a vector of strings, each of which is no longer than max_width.
+// update_text_wrappings will convert some provided text into a vector of strings, each of which is no longer than max_width.
 // This is mostly a utility for rendering. Alongside each string, the function returns where in the origional string
 // the line "starts". This is required because the wrap text fn will delete whitespace if it lies on the boundary
 // of a new line
@@ -259,7 +266,7 @@ auto TextBox::update_text_wrappings(const std::string& text, size_t max_width) -
         }
     }
 
-    cached_line_wrappings_.emplace_back(current_line_buffer_location, current_line);
+    cached_line_wrappings_.emplace_back(current_line_buffer_location, current_line + " ");
 }
 
 auto TextBox::render(Frame frame) -> void {
@@ -271,7 +278,7 @@ auto TextBox::render(Frame frame) -> void {
 
     update_text_wrappings(text_, max_width);
     const auto& wrapped_lines = cached_line_wrappings_;
-    auto [cursor_line, cursor_col] = map_buffer_cursor_to_screen_cursor(cursor_state_.cursor_raw_position, wrapped_lines);
+    auto [cursor_line, cursor_col] = map_buffer_cursor_to_screen_cursor(cursor_state_.cursor_raw_position, max_width, wrapped_lines);
 
     // Store rendered position for up/down arrow navigation
     cursor_state_.rendered_row = cursor_line;
@@ -398,16 +405,11 @@ auto TextBox::move_cursor_up() -> void {
         return;
     }
 
-    auto& [_, current_line_text] = cached_line_wrappings_[cursor_state_.rendered_row];
-    auto cursor_at_end_of_line = cursor_state_.rendered_col >= current_line_text.size();
-
     // To determine the cursor's position in the text buffer we need to determine
     // how far into the "next line" it gets and where that next line starts.
     auto cursor_next_line = cursor_state_.rendered_row - 1;
     auto& [next_line_start, next_line_text] = cached_line_wrappings_[cursor_next_line];
-    auto cursor_offset_in_next_line = cursor_at_end_of_line
-        ? next_line_text.size()
-        : std::min(cursor_state_.rendered_col, next_line_text.size());
+    auto cursor_offset_in_next_line = std::min(cursor_state_.rendered_col, next_line_text.size() - 1);
 
     cursor_state_.cursor_raw_position = next_line_start + cursor_offset_in_next_line;
 }
@@ -418,16 +420,11 @@ auto TextBox::move_cursor_down() -> void {
         return;
     }
 
-    auto& [_, current_line_text] = cached_line_wrappings_[cursor_state_.rendered_row];
-    auto cursor_at_end_of_line = cursor_state_.rendered_col >= current_line_text.size();
-
     // To determine the cursor's position in the text buffer we need to determine
     // how far into the "next line" it gets and where that next line starts.
     auto cursor_next_line = cursor_state_.rendered_row + 1;
     auto& [next_line_start, next_line_text] = cached_line_wrappings_[cursor_next_line];
-    auto cursor_offset_in_next_line = cursor_at_end_of_line
-        ? next_line_text.size()
-        : std::min(cursor_state_.rendered_col, next_line_text.size());
+    auto cursor_offset_in_next_line = std::min(cursor_state_.rendered_col, next_line_text.size() - 1);
 
     cursor_state_.cursor_raw_position = next_line_start + cursor_offset_in_next_line;
 }

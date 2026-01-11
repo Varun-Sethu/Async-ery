@@ -54,7 +54,7 @@ TEST(TextBoxTest, RendersSimpleText) {
         Cursor("H") + "ello"
     });
 
-    EXPECT_EQ(test_frame.to_string(), std::string(expected));
+    EXPECT_FRAME_EQ(test_frame.to_string(), expected);
 }
 
 TEST(TextBoxTest, RightArrowMovesCursorRight) {
@@ -69,7 +69,7 @@ TEST(TextBoxTest, RightArrowMovesCursorRight) {
         "A" + Cursor("B") + "C"
     });
 
-    EXPECT_EQ(test_frame.to_string(), std::string(expected));
+    EXPECT_FRAME_EQ(test_frame.to_string(), expected);
 }
 
 TEST(TextBoxTest, LeftArrowMovesCursorLeft) {
@@ -82,13 +82,13 @@ TEST(TextBoxTest, LeftArrowMovesCursorLeft) {
     text_box.render(frame);
 
     auto expected = TextBorder::PaddedContent(10, 3, { "AB" + Cursor("C") });
-    EXPECT_EQ(test_frame.to_string(), std::string(expected));
+    EXPECT_FRAME_EQ(test_frame.to_string(), expected);
 
     text_box.on_special_key_press(Key::Left);
     text_box.render(frame);
     expected = TextBorder::PaddedContent(10, 3, { "A" + Cursor("B") + "C" });
 
-    EXPECT_EQ(test_frame.to_string(), std::string(expected));
+    EXPECT_FRAME_EQ(test_frame.to_string(), expected);
 }
 
 TEST(TextBoxTest, LeftArrowAtStartDoesNothing) {
@@ -101,7 +101,7 @@ TEST(TextBoxTest, LeftArrowAtStartDoesNothing) {
     text_box.render(frame);
     auto expected = TextBorder::PaddedContent(10, 3, { Cursor("A") + "BC" });
 
-    EXPECT_EQ(test_frame.to_string(), std::string(expected));
+    EXPECT_FRAME_EQ(test_frame.to_string(), expected);
 }
 
 TEST(TextBoxTest, RightArrowAtEndShowsCursorOnSpace) {
@@ -114,7 +114,7 @@ TEST(TextBoxTest, RightArrowAtEndShowsCursorOnSpace) {
     text_box.render(frame);
     auto expected = TextBorder::PaddedContent(10, 3, { "AB" + Cursor(" ") });
 
-    EXPECT_EQ(test_frame.to_string(), std::string(expected));
+    EXPECT_FRAME_EQ(test_frame.to_string(), expected);
 }
 
 
@@ -130,7 +130,7 @@ TEST(TextBoxTest, WrapsLongTextToFitWidth) {
         ScrollDownIndicator(5)
     });
 
-    EXPECT_EQ(test_frame.to_string(), std::string(expected));
+    EXPECT_FRAME_EQ(test_frame.to_string(), expected);
 }
 
 TEST(TextBoxTest, ShowsDownArrowWhenContentOverflows) {
@@ -145,7 +145,7 @@ TEST(TextBoxTest, ShowsDownArrowWhenContentOverflows) {
         ScrollDownIndicator(5)
     });
 
-    EXPECT_EQ(test_frame.to_string(), std::string(expected));
+    EXPECT_FRAME_EQ(test_frame.to_string(), expected);
 }
 
 TEST(TextBoxTest, ShowsDownIndicatorWhenCursorNearBottom) {
@@ -165,7 +165,7 @@ TEST(TextBoxTest, ShowsDownIndicatorWhenCursorNearBottom) {
         ScrollDownIndicator(5)
     });
 
-    EXPECT_EQ(test_frame.to_string(), std::string(expected));
+    EXPECT_FRAME_EQ(test_frame.to_string(), expected);
 }
 
 TEST(TextBoxTest, UpArrowMovesCursorToPreviousLine) {
@@ -187,7 +187,7 @@ TEST(TextBoxTest, UpArrowMovesCursorToPreviousLine) {
         ScrollDownIndicator(5)
     });
 
-    EXPECT_EQ(test_frame.to_string(), std::string(expected));
+    EXPECT_FRAME_EQ(test_frame.to_string(), expected);
 }
 
 TEST(TextBoxTest, UpArrowAtTopDoesNothing) {
@@ -203,7 +203,7 @@ TEST(TextBoxTest, UpArrowAtTopDoesNothing) {
         ScrollDownIndicator(5)
     });
 
-    EXPECT_EQ(test_frame.to_string(), std::string(expected));
+    EXPECT_FRAME_EQ(test_frame.to_string(), expected);
 }
 
 TEST(TextBoxTest, CursorMovementAutoScrolls) {
@@ -223,7 +223,7 @@ TEST(TextBoxTest, CursorMovementAutoScrolls) {
         ScrollDownIndicator(5)
     });
 
-    EXPECT_EQ(test_frame.to_string(), std::string(expected));
+    EXPECT_FRAME_EQ(test_frame.to_string(), expected);
 }
 
 TEST(TextBoxTest, ShowsUpIndicatorWhenScrolledDown) {
@@ -244,5 +244,48 @@ TEST(TextBoxTest, ShowsUpIndicatorWhenScrolledDown) {
         ScrollDownIndicator(5)
     });
 
-    EXPECT_EQ(test_frame.to_string(), std::string(expected));
+    EXPECT_FRAME_EQ(test_frame.to_string(), expected);
+}
+
+TEST(TextBoxTest, EnterSplitsLongLine) {
+    auto test_frame = TestFrame(7, 7);
+    auto frame = test_frame.create_termy_frame(std::nullopt, ComponentAlignment::Left);
+    auto text_box = Termy::TextBox("ABCDEFGHIJKLMNOPQRSTU", DefaultColors);
+
+    text_box.on_special_key_press(Key::Right);
+    text_box.on_special_key_press(Key::Right);
+    text_box.on_special_key_press(Key::Right);
+    text_box.on_special_key_press(Key::Enter);
+    text_box.render(frame);
+    auto expected = TextBorder::PaddedContent(7, 7, {
+        "ABC",
+        Cursor("D") + "EFGH",
+        "IJKLM",
+        "NOPQR",
+        "STU"
+    });
+
+    EXPECT_FRAME_EQ(test_frame.to_string(), expected);
+
+
+    text_box.on_special_key_press(Key::Right);
+    text_box.on_special_key_press(Key::Right);
+    text_box.on_special_key_press(Key::Right);
+    text_box.on_special_key_press(Key::Right);
+    text_box.on_special_key_press(Key::Right);
+    text_box.on_special_key_press(Key::Right);
+    text_box.on_special_key_press(Key::Right);
+    text_box.on_special_key_press(Key::Enter);
+
+    test_frame.clear();
+    text_box.render(frame);
+    expected = TextBorder::PaddedContent(7, 7, {
+        "ABC",
+        "DEFGH",
+        "IJ",
+        Cursor("K") + "LMNO",
+        ScrollDownIndicator(5)
+    });
+
+    EXPECT_FRAME_EQ(test_frame.to_string(), expected);
 }

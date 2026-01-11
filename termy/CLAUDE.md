@@ -18,6 +18,7 @@ termy/
 │   ├── key.h                 # Key enum for keyboard events
 │   ├── keyboard_poll_source.h # Keyboard input polling (IPollSource)
 │   ├── menu.h                # Menu component
+│   ├── text_box.h            # TextBox component (editable text area)
 │   ├── renderable.h          # IRenderable interface
 │   ├── span_2d.h             # 2D view/span template
 │   └── window.h              # Window with multi-pane layout
@@ -25,9 +26,11 @@ termy/
 │   ├── frame.cpp
 │   ├── keyboard_poll_source.cpp
 │   ├── menu.cpp
+│   ├── text_box.cpp
 │   └── window.cpp
 ├── test/                     # Test files
 │   ├── menu_test.cpp
+│   ├── text_box_test.cpp
 │   ├── window_test.cpp
 │   └── mocks/
 │       └── mock_keyboard_source.h
@@ -89,11 +92,14 @@ termy/
 #### 4. UI Components
 
 **Menu** (`menu.h`)
-- Implements `IRenderable`
-- State: items (label + tooltip), focused index, colors
-- Registers keyboard listeners for Up/Down navigation
-- `render()` - Displays items with focus highlighting
-- `move_up()` / `move_down()` - Navigate with boundary checks
+- Selectable list of items with focus highlighting
+- Up/Down arrow navigation
+
+**TextBox** (`text_box.h`)
+- Editable text area with word wrapping
+- Left/Right cursor movement, Up/Down line navigation
+- Auto-scrolling with scroll indicators when content overflows
+- Supports newline insertion with Enter key
 
 ### Component Interaction Flow
 
@@ -143,5 +149,6 @@ timer_source.periodic(33ms).for_each([&](auto) {
 - GoogleTest framework
 - MockKeyboardSource for simulating input without terminal
 - Tests cover: menu rendering, navigation, window layout, pane percentages
-- When writing tests, attempt to use the testing utils to create "mock" layouts
-    - read window_test.cpp and menu_test.cpp for information.
+- Use `EXPECT_FRAME_EQ` macro for frame comparisons (provides visual diff on failure)
+- Use `TestFrame` and `TextBorder::PaddedContent` helpers for building expected output
+- See existing tests (menu_test.cpp, text_box_test.cpp, window_test.cpp) for examples
