@@ -28,7 +28,7 @@ TEST(MenuTest, RendersSingleItem) {
         MenuHighlight.Focused(" Item 1 ")
     });
 
-    EXPECT_EQ(test_frame.to_string(), expected);
+    EXPECT_FRAME_EQ(test_frame.to_string(), expected);
 }
 
 TEST(MenuTest, RendersMultipleItemsWithFocusOnFirst) {
@@ -48,7 +48,7 @@ TEST(MenuTest, RendersMultipleItemsWithFocusOnFirst) {
         MenuHighlight.Unfocused(" Option C ")
     });
 
-    EXPECT_EQ(test_frame.to_string(), expected);
+    EXPECT_FRAME_EQ(test_frame.to_string(), expected);
 }
 
 
@@ -70,7 +70,7 @@ TEST(MenuNavigationTest, MoveDownChangesFocusedItem) {
         MenuHighlight.Unfocused(" Option C ")
     });
 
-    EXPECT_EQ(test_frame.to_string(), expected);
+    EXPECT_FRAME_EQ(test_frame.to_string(), expected);
 }
 
 TEST(MenuNavigationTest, MoveUpChangesFocusedItem) {
@@ -93,7 +93,7 @@ TEST(MenuNavigationTest, MoveUpChangesFocusedItem) {
         MenuHighlight.Focused(" Option C ")
     });
 
-    EXPECT_EQ(test_frame.to_string(), expected_after_downs);
+    EXPECT_FRAME_EQ(test_frame.to_string(), expected_after_downs);
 
     // Now press up and assert the new state, this should
     // have moved the focussed item to the middle
@@ -106,7 +106,7 @@ TEST(MenuNavigationTest, MoveUpChangesFocusedItem) {
         MenuHighlight.Unfocused(" Option C ")
     });
 
-    EXPECT_EQ(test_frame.to_string(), expected);
+    EXPECT_FRAME_EQ(test_frame.to_string(), expected);
 }
 
 TEST(MenuNavigationTest, MoveUpAtFirstItemDoesNothing) {
@@ -125,7 +125,7 @@ TEST(MenuNavigationTest, MoveUpAtFirstItemDoesNothing) {
         MenuHighlight.Unfocused(" Option B ")
     });
 
-    EXPECT_EQ(test_frame.to_string(), expected);
+    EXPECT_FRAME_EQ(test_frame.to_string(), expected);
 }
 
 TEST(MenuNavigationTest, MoveDownAtLastItemDoesNothing) {
@@ -146,5 +146,5 @@ TEST(MenuNavigationTest, MoveDownAtLastItemDoesNothing) {
         MenuHighlight.Focused(" Option B ")
     });
 
-    EXPECT_EQ(test_frame.to_string(), expected);
+    EXPECT_FRAME_EQ(test_frame.to_string(), expected);
 }

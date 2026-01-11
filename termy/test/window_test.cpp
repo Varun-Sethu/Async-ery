@@ -36,7 +36,7 @@ TEST(WindowTest, RendersSinglePaneFullWidth) {
         MenuHighlight.Focused(" Item ")
     });
 
-    EXPECT_EQ(window.to_string(), expected);
+    EXPECT_FRAME_EQ(window.to_string(), expected);
 }
 
 TEST(WindowTest, RendersTwoPanesSideBySide) {
@@ -54,7 +54,7 @@ TEST(WindowTest, RendersTwoPanesSideBySide) {
         TextBorder::PaddedContent(5, 3, { MenuHighlight.Focused(" R ") })
     });
 
-    EXPECT_EQ(window.to_string(), expected);
+    EXPECT_FRAME_EQ(window.to_string(), expected);
 }
 
 TEST(WindowTest, CalculatesPercentageWidthsCorrectly) {
@@ -72,7 +72,7 @@ TEST(WindowTest, CalculatesPercentageWidthsCorrectly) {
         TextBorder::PaddedContent(5, 3, { MenuHighlight.Focused(" Y ") })
     });
 
-    EXPECT_EQ(window.to_string(), expected);
+    EXPECT_FRAME_EQ(window.to_string(), expected);
 }
 
 TEST(WindowTest, CentersContentInWiderPane) {
@@ -87,7 +87,7 @@ TEST(WindowTest, CentersContentInWiderPane) {
         "  " + MenuHighlight.Focused(" Hi ") + "  "
     });
 
-    EXPECT_EQ(window.to_string(), expected);
+    EXPECT_FRAME_EQ(window.to_string(), expected);
 }
 
 TEST(WindowTest, MultipleRowsRenderedCorrectly) {
@@ -106,7 +106,7 @@ TEST(WindowTest, MultipleRowsRenderedCorrectly) {
         MenuHighlight.Unfocused(" Two ")
     });
 
-    EXPECT_EQ(window.to_string(), expected);
+    EXPECT_FRAME_EQ(window.to_string(), expected);
 }
 
 TEST(WindowTest, TruncatesContentThatExceedsPaneWidth) {
@@ -121,7 +121,7 @@ TEST(WindowTest, TruncatesContentThatExceedsPaneWidth) {
         MenuHighlight.Focused(" Hel")
     });
 
-    EXPECT_EQ(window.to_string(), expected);
+    EXPECT_FRAME_EQ(window.to_string(), expected);
 }
 
 TEST(WindowFocusTest, ArrowKeysMoveCandidateAndEnterFocuses) {
@@ -145,7 +145,7 @@ TEST(WindowFocusTest, ArrowKeysMoveCandidateAndEnterFocuses) {
         UNFOCUSED(MenuHighlight.Focused(" B ")),
         UNFOCUSED(MenuHighlight.Focused(" C "))
     });
-    EXPECT_EQ(window.to_string(), std::string(initial_expected));
+    EXPECT_FRAME_EQ(window.to_string(), initial_expected);
 
     keyboard.simulate_key(Key::Right);
     window.redraw_panes();
@@ -154,7 +154,7 @@ TEST(WindowFocusTest, ArrowKeysMoveCandidateAndEnterFocuses) {
         HOVERING_OVER(MenuHighlight.Focused(" B ")),
         UNFOCUSED(MenuHighlight.Focused(" C "))
     });
-    EXPECT_EQ(window.to_string(), std::string(after_right_expected));
+    EXPECT_FRAME_EQ(window.to_string(), after_right_expected);
 
     keyboard.simulate_key(Key::Enter);
     window.redraw_panes();
@@ -163,7 +163,7 @@ TEST(WindowFocusTest, ArrowKeysMoveCandidateAndEnterFocuses) {
         FOCUSED(MenuHighlight.Focused(" B ")),
         UNFOCUSED(MenuHighlight.Focused(" C "))
     });
-    EXPECT_EQ(window.to_string(), std::string(after_enter_expected));
+    EXPECT_FRAME_EQ(window.to_string(), after_enter_expected);
 
     keyboard.simulate_key(Key::Escape);
     window.redraw_panes();
@@ -172,7 +172,7 @@ TEST(WindowFocusTest, ArrowKeysMoveCandidateAndEnterFocuses) {
         HOVERING_OVER(MenuHighlight.Focused(" B ")),
         UNFOCUSED(MenuHighlight.Focused(" C "))
     });
-    EXPECT_EQ(window.to_string(), std::string(after_escape_expected));
+    EXPECT_FRAME_EQ(window.to_string(), after_escape_expected);
 }
 
 TEST(WindowFocusTest, KeysOnlyForwardedToFocusedPane) {
@@ -209,7 +209,7 @@ TEST(WindowFocusTest, KeysOnlyForwardedToFocusedPane) {
             MenuHighlight.Unfocused(" R3 ")
         })
     });
-    EXPECT_EQ(window.to_string(), std::string(after_down_expected));
+    EXPECT_FRAME_EQ(window.to_string(), after_down_expected);
 
     auto HOVERING_OVER = [](Items items) { return CandidateBorder.ColouredBorder(6, items); };
 
@@ -229,5 +229,5 @@ TEST(WindowFocusTest, KeysOnlyForwardedToFocusedPane) {
             MenuHighlight.Unfocused(" R3 ")
         })
     });
-    EXPECT_EQ(window.to_string(), std::string(after_escape_expected));
+    EXPECT_FRAME_EQ(window.to_string(), after_escape_expected);
 }
