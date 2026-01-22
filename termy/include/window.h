@@ -1,13 +1,13 @@
 #pragma once
 
+#include <cstddef>
 #include <string>
 #include <vector>
 
-#include "color.h"
 #include "frame.h"
+#include "keyboard_poll_source.h"
 #include "text_grid.h"
 #include "window_component.h"
-#include "keyboard_poll_source.h"
 
 namespace Termy {
 
@@ -47,7 +47,7 @@ public:
 
     // Interface implementation for IKeyboardListener
     auto on_special_key_press(Key key) -> void override;
-    auto on_char_key_press(char c) -> void override;
+    auto on_char_key_press(char character) -> void override;
 
 private:
     // Panes can either be focused or not focused. If a pane is not in focus

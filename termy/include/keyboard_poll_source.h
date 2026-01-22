@@ -1,11 +1,11 @@
 #pragma once
 
-#include <vector>
 #include <chrono>
-#include <functional>
+#include <vector>
+
+#include <termios.h>
 
 #include "scheduler/poll_source.h"
-#include "termios.h"
 
 #include "key.h"
 
@@ -18,13 +18,21 @@ class IKeyboardListener {
 public:
     virtual ~IKeyboardListener() = default;
 
+    IKeyboardListener(const IKeyboardListener&) = delete;
+    auto operator=(const IKeyboardListener&) -> IKeyboardListener& = delete;
+    IKeyboardListener(IKeyboardListener&&) = delete;
+    auto operator=(IKeyboardListener&&) -> IKeyboardListener& = delete;
+
     // on_special_key_press is invoked by the keyboard poll source whenever a
     // special key (arrows, enter, escape, etc.) is pressed.
     virtual auto on_special_key_press(Key key) -> void = 0;
 
     // on_char_key_press is invoked when a printable character is typed.
     // Default implementation does nothing - override in components that need text input.
-    virtual auto on_char_key_press(char c) -> void { (void)c; }
+    virtual auto on_char_key_press(char character) -> void { (void)character; }
+
+protected:
+    IKeyboardListener() = default;
 };
 
 // IKeyboardSource is an interface for a keyboard source that can be polled for key presses.
@@ -33,8 +41,16 @@ class IKeyboardSource {
 public:
     virtual ~IKeyboardSource() = default;
 
+    IKeyboardSource(const IKeyboardSource&) = delete;
+    auto operator=(const IKeyboardSource&) -> IKeyboardSource& = delete;
+    IKeyboardSource(IKeyboardSource&&) = delete;
+    auto operator=(IKeyboardSource&&) -> IKeyboardSource& = delete;
+
     virtual auto add_listener(IKeyboardListener& listener) -> void = 0;
     virtual auto remove_listener(IKeyboardListener& listener) -> void = 0;
+
+protected:
+    IKeyboardSource() = default;
 };
 
 // KeyboardPollSource is a concrete implementation of IKeyboardSource that polls the keyboard for key presses.
@@ -44,6 +60,11 @@ public:
     KeyboardPollSource();
     ~KeyboardPollSource() override;
 
+    KeyboardPollSource(const KeyboardPollSource&) = delete;
+    auto operator=(const KeyboardPollSource&) -> KeyboardPollSource& = delete;
+    KeyboardPollSource(KeyboardPollSource&&) = delete;
+    auto operator=(KeyboardPollSource&&) -> KeyboardPollSource& = delete;
+
     auto add_listener(IKeyboardListener& listener) -> void override;
     auto remove_listener(IKeyboardListener& listener) -> void override;
 
@@ -52,7 +73,7 @@ public:
 
 private:
     auto create_special_key_listener_notification_jobs(Key key) -> std::vector<Scheduler::Job>;
-    auto create_char_key_listener_notification_jobs(char c) -> std::vector<Scheduler::Job>;
+    auto create_char_key_listener_notification_jobs(char character) -> std::vector<Scheduler::Job>;
 
     termios term_;
     termios original_term_;

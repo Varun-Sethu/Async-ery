@@ -1,20 +1,23 @@
 #include "text_box.h"
-#include "key.h"
 
 #include <algorithm>
-#include <cassert>
-#include <span>
+#include <cctype>
+#include <cstddef>
+#include <string>
+#include <string_view>
+#include <utility>
+#include <vector>
+
+#include "color.h"
+#include "frame.h"
+#include "key.h"
 
 namespace Termy {
 
 namespace {
 struct Token {
-    Token(std::string_view text, bool is_whitespace)
-        : text_(text)
-        , is_whitespace_(is_whitespace) {}
-
-    std::string_view text_;
-    bool             is_whitespace_;
+    std::string_view text;
+    bool             is_whitespace;
 };
 
 // Tokenize takes a stream of characters and returns a vector of tokens.
@@ -196,22 +199,22 @@ auto TextBox::update_text_wrappings(const std::string& text, size_t max_width) -
     for (const auto& token : tokenize(text)) {
         // If this token triggers the start of any new lines, the line(s) that follow it will reference
         // the current_line + the token length
-        auto is_new_line = token.text_ == "\n";
+        auto is_new_line = token.text == "\n";
         if (is_new_line) {
             current_line += " ";
             cached_line_wrappings_.emplace_back(current_line_buffer_location, current_line);
             current_line.clear();
 
-            current_buffer_location += token.text_.size();
+            current_buffer_location += token.text.size();
             current_line_buffer_location = current_buffer_location;
             continue;
         }
 
         // Dont need to create a new line, token can be appended to this line
-        auto token_fits_on_current_line = current_line.size() + token.text_.size() <= max_width;
+        auto token_fits_on_current_line = current_line.size() + token.text.size() <= max_width;
         if (token_fits_on_current_line) {
-            current_line += token.text_;
-            current_buffer_location += token.text_.size();
+            current_line += token.text;
+            current_buffer_location += token.text.size();
             continue;
         }
 
@@ -224,11 +227,11 @@ auto TextBox::update_text_wrappings(const std::string& text, size_t max_width) -
         //                  Case 2.1: The token is short enough to fit on a single line, so we just add it to the current line.
         //                  Case 2.2: The token is too long to fit on a single line, so we need to split it into multiple lines.
         // Case 1:
-        if (token.is_whitespace_) {
+        if (token.is_whitespace) {
             cached_line_wrappings_.emplace_back(current_line_buffer_location, current_line);
             current_line.clear();
 
-            current_buffer_location += token.text_.size();
+            current_buffer_location += token.text.size();
             current_line_buffer_location = current_buffer_location;
             continue;
         }
@@ -241,15 +244,15 @@ auto TextBox::update_text_wrappings(const std::string& text, size_t max_width) -
         }
 
         // Case 2.1:
-        auto token_can_fit_on_line = token.text_.size() <= max_width;
+        auto token_can_fit_on_line = token.text.size() <= max_width;
         if (token_can_fit_on_line) {
-            current_line += token.text_;
-            current_buffer_location += token.text_.size();
+            current_line += token.text;
+            current_buffer_location += token.text.size();
         } else {
             // Case 2.2:
-            for (std::size_t i = 0; i < token.text_.size(); i += max_width) {
-                auto fragment_size = std::min(max_width, token.text_.size() - i);
-                current_line += token.text_.substr(i, fragment_size);
+            for (std::size_t i = 0; i < token.text.size(); i += max_width) {
+                auto fragment_size = std::min(max_width, token.text.size() - i);
+                current_line += token.text.substr(i, fragment_size);
 
                 // Flush the current line to the line wrappings if it is now the max_width
                 // ie. the next fragment wont fit on this line
@@ -382,8 +385,8 @@ auto TextBox::on_special_key_press(Key key) -> void {
     }
 }
 
-auto TextBox::on_char_key_press(char chr) -> void {
-    text_.insert(cursor_state_.cursor_raw_position, 1, chr);
+auto TextBox::on_char_key_press(char character) -> void {
+    text_.insert(cursor_state_.cursor_raw_position, 1, character);
     cursor_state_.cursor_raw_position++;
 }
 

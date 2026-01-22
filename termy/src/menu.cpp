@@ -1,6 +1,12 @@
 #include "menu.h"
 
 #include <algorithm>
+#include <cstddef>
+#include <string>
+#include <utility>
+#include <vector>
+
+#include "frame.h"
 #include "key.h"
 
 namespace Termy {
@@ -27,16 +33,16 @@ auto Menu::render(Frame frame) -> void
         const auto is_focused = (i == focused_index_);
         const auto& item = items_[i];
 
-        auto fg = is_focused ? colors_.focused_fg : colors_.unfocused_fg;
-        auto bg = is_focused ? colors_.focused_bg : colors_.unfocused_bg;
+        auto foreground = is_focused ? colors_.focused_fg : colors_.unfocused_fg;
+        auto background = is_focused ? colors_.focused_bg : colors_.unfocused_bg;
 
         auto padded_label = " " + item.label;
         auto padding_needed = item_width - static_cast<int>(padded_label.length());
-        for (auto p = 0; p < padding_needed; ++p) {
+        for (auto pad = 0; pad < padding_needed; ++pad) {
             padded_label += " ";
         }
 
-        frame.write(padded_label, fg, bg);
+        frame.write(padded_label, foreground, background);
         frame.newline();
     }
 }

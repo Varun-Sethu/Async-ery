@@ -1,10 +1,24 @@
 #include "window.h"
-#include "frame.h"
 
-#include <locale>
+#include <algorithm>
 #include <codecvt>
+#include <cstddef>
+#include <cstdint>
+#include <locale>
+#include <optional>
+#include <string>
+#include <utility>
+#include <vector>
 
+// NOLINTNEXTLINE(misc-include-cleaner): fmt/format.h provides fmt::format which is used in to_string()
 #include <fmt/format.h>
+
+#include "color.h"
+#include "frame.h"
+#include "key.h"
+#include "keyboard_poll_source.h"
+#include "text_grid.h"
+#include "window_component.h"
 
 namespace Termy {
 namespace {
@@ -69,9 +83,9 @@ auto Window::handle_key_press_when_a_pane_is_in_focus(Key key) -> void {
     }
 }
 
-auto Window::on_char_key_press(char c) -> void {
+auto Window::on_char_key_press(char character) -> void {
     if (pane_cursor_state_ == PaneCursorState::Focused) {
-        panes_[pane_cursor_].component.on_char_key_press(c);
+        panes_[pane_cursor_].component.on_char_key_press(character);
     }
 }
 
@@ -106,16 +120,17 @@ auto Window::redraw_panes() -> void {
 }
 
 auto Window::to_string() const -> std::string {
-    auto produce_coloured_text_ansi = [](Color fg, Color bg, const std::string& text) -> std::string {
+    auto produce_coloured_text_ansi = [](Color foreground, Color background, const std::string& text) -> std::string {
         if (text.empty()) {
             return {};
         }
 
-        auto has_color = (fg != Color::Default) || (bg != Color::Default);
+        auto has_color = (foreground != Color::Default) || (background != Color::Default);
         if (has_color) {
+            // NOLINTNEXTLINE(misc-include-cleaner): False positive - fmt/format.h is included at top of file
             return fmt::format("\033[{};{}m{}\033[0m",
-                to_foreground_code(fg),
-                to_background_code(bg),
+                to_foreground_code(foreground),
+                to_background_code(background),
                 text);
         }
         return text;

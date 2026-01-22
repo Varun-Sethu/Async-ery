@@ -17,28 +17,35 @@ struct Cell {
 
 using TextGrid = std::vector<std::vector<Cell>>;
 
-struct TextGridSpan {
-    TextGrid* data;
-    size_t start_col;
-    size_t width;
-    size_t height;
+class TextGridSpan {
+public:
+    static auto from_grid(TextGrid& grid, size_t start_col, size_t view_width) -> TextGridSpan {
+        return {&grid, start_col, view_width, grid.size()};
+    }
 
     auto at(size_t row, size_t col) -> Cell& {
-        return (*data)[row][start_col + col];
+        return (*data_)[row][start_col_ + col];
     }
 
-    auto at(size_t row, size_t col) const -> const Cell& {
-        return (*data)[row][start_col + col];
+    [[nodiscard]] auto at(size_t row, size_t col) const -> const Cell& {
+        return (*data_)[row][start_col_ + col];
     }
 
-    static auto from_grid(TextGrid& grid, size_t start_col, size_t view_width) -> TextGridSpan {
-        return TextGridSpan{
-            .data = &grid,
-            .start_col = start_col,
-            .width = view_width,
-            .height = grid.size()
-        };
-    }
+    [[nodiscard]] auto width() const -> size_t { return width_; }
+    [[nodiscard]] auto height() const -> size_t { return height_; }
+
+private:
+    TextGridSpan(TextGrid* data, size_t start_col, size_t width, size_t height)
+        : data_(data)
+        , start_col_(start_col)
+        , width_(width)
+        , height_(height)
+    {}
+
+    TextGrid* data_;
+    size_t start_col_;
+    size_t width_;
+    size_t height_;
 };
 
 }

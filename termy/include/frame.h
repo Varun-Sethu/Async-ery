@@ -1,7 +1,8 @@
 #pragma once
 
-#include <string>
+#include <cstddef>
 #include <optional>
+#include <string>
 
 #include "color.h"
 #include "text_grid.h"
@@ -23,8 +24,8 @@ public:
     // Write the contents of the IRenderable to the frame.
     auto write(
         const std::string& text,
-        std::optional<Color> fg = std::nullopt,
-        std::optional<Color> bg = std::nullopt) -> void;
+        std::optional<Color> foreground = std::nullopt,
+        std::optional<Color> background = std::nullopt) -> void;
 
     // newline indicates that the write cursor for the frame should move to the next line.
     // use this instead of \n when attempting to render a new line. Using \n will result in weirdly
@@ -45,10 +46,10 @@ private:
     size_t frame_content_col_cursor_ = 0;
     size_t content_width_ = 0;
 
-    size_t frame_content_row_start_;
-    size_t frame_content_col_start_;
-    size_t frame_content_max_width_;
-    size_t frame_content_max_height_;
+    size_t frame_content_row_start_ = 0;
+    size_t frame_content_col_start_ = 0;
+    size_t frame_content_max_width_ = 0;
+    size_t frame_content_max_height_ = 0;
 };
 
 }

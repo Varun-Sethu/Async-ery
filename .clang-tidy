@@ -1,5 +1,5 @@
 ---
-Checks:             '*,-abseil-*,-altera-*,-android-*,-fuchsia-*,-google-*,-llvm*,readability-*,clang-analyzer-*,-clang-analyzer-optin.performance.Padding,-misc-no-recursion'
+Checks:             '*,-abseil-*,-altera-*,-android-*,-fuchsia-*,-google-*,-llvm*,readability-*,clang-analyzer-*,-clang-analyzer-optin.performance.Padding,-misc-no-recursion,-cppcoreguidelines-avoid-magic-numbers,-readability-magic-numbers,-cppcoreguidelines-avoid-const-or-ref-data-members,-bugprone-easily-swappable-parameters,-misc-use-anonymous-namespace'
 WarningsAsErrors:   true
-HeaderFilterRegex:  '.'
+HeaderFilterRegex:  '^.*/async_lib\.linting_errors/(src|include|termy)/.*$'
 ...

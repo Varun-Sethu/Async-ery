@@ -1,5 +1,8 @@
+#include <vector>
+
 #include <gtest/gtest.h>
 
+#include "color.h"
 #include "menu.h"
 #include "key.h"
 #include "tui_test_helpers.h"
@@ -10,10 +13,12 @@ using Termy::Testing::TestFrame;
 using Termy::Testing::TextHighlight;
 using Termy::Testing::TextBorder;
 
-static const auto MenuHighlight = TextHighlight(
-    Color::Black, Color::White,
-    Color::White, Color::Default
-);
+static auto GetMenuHighlight() -> TextHighlight {
+    return {
+        Color::Black, Color::White,
+        Color::White, Color::Default
+    };
+}
 
 TEST(MenuTest, RendersSingleItem) {
     auto test_frame = TestFrame(10, 3);
@@ -25,7 +30,7 @@ TEST(MenuTest, RendersSingleItem) {
     menu.render(frame);
 
     auto expected = TextBorder::PaddedContent(10, 3, {
-        MenuHighlight.Focused(" Item 1 ")
+        GetMenuHighlight().Focused(" Item 1 ")
     });
 
     EXPECT_FRAME_EQ(test_frame.to_string(), expected);
@@ -43,9 +48,9 @@ TEST(MenuTest, RendersMultipleItemsWithFocusOnFirst) {
     menu.render(frame);
 
     auto expected = TextBorder::PaddedContent(12, 5, {
-        MenuHighlight.Focused(" Option A "),
-        MenuHighlight.Unfocused(" Option B "),
-        MenuHighlight.Unfocused(" Option C ")
+        GetMenuHighlight().Focused(" Option A "),
+        GetMenuHighlight().Unfocused(" Option B "),
+        GetMenuHighlight().Unfocused(" Option C ")
     });
 
     EXPECT_FRAME_EQ(test_frame.to_string(), expected);
@@ -65,9 +70,9 @@ TEST(MenuNavigationTest, MoveDownChangesFocusedItem) {
     menu.render(frame);
 
     auto expected = TextBorder::PaddedContent(12, 5, {
-        MenuHighlight.Unfocused(" Option A "),
-        MenuHighlight.Focused(" Option B "),
-        MenuHighlight.Unfocused(" Option C ")
+        GetMenuHighlight().Unfocused(" Option A "),
+        GetMenuHighlight().Focused(" Option B "),
+        GetMenuHighlight().Unfocused(" Option C ")
     });
 
     EXPECT_FRAME_EQ(test_frame.to_string(), expected);
@@ -88,9 +93,9 @@ TEST(MenuNavigationTest, MoveUpChangesFocusedItem) {
     menu.render(frame);
 
     auto expected_after_downs = TextBorder::PaddedContent(12, 5, {
-        MenuHighlight.Unfocused(" Option A "),
-        MenuHighlight.Unfocused(" Option B "),
-        MenuHighlight.Focused(" Option C ")
+        GetMenuHighlight().Unfocused(" Option A "),
+        GetMenuHighlight().Unfocused(" Option B "),
+        GetMenuHighlight().Focused(" Option C ")
     });
 
     EXPECT_FRAME_EQ(test_frame.to_string(), expected_after_downs);
@@ -101,9 +106,9 @@ TEST(MenuNavigationTest, MoveUpChangesFocusedItem) {
     menu.render(frame);
 
     auto expected = TextBorder::PaddedContent(12, 5, {
-        MenuHighlight.Unfocused(" Option A "),
-        MenuHighlight.Focused(" Option B "),
-        MenuHighlight.Unfocused(" Option C ")
+        GetMenuHighlight().Unfocused(" Option A "),
+        GetMenuHighlight().Focused(" Option B "),
+        GetMenuHighlight().Unfocused(" Option C ")
     });
 
     EXPECT_FRAME_EQ(test_frame.to_string(), expected);
@@ -121,8 +126,8 @@ TEST(MenuNavigationTest, MoveUpAtFirstItemDoesNothing) {
     menu.render(frame);
 
     auto expected = TextBorder::PaddedContent(12, 4, {
-        MenuHighlight.Focused(" Option A "),
-        MenuHighlight.Unfocused(" Option B ")
+        GetMenuHighlight().Focused(" Option A "),
+        GetMenuHighlight().Unfocused(" Option B ")
     });
 
     EXPECT_FRAME_EQ(test_frame.to_string(), expected);
@@ -142,8 +147,8 @@ TEST(MenuNavigationTest, MoveDownAtLastItemDoesNothing) {
     menu.render(frame);
 
     auto expected = TextBorder::PaddedContent(12, 4, {
-        MenuHighlight.Unfocused(" Option A "),
-        MenuHighlight.Focused(" Option B ")
+        GetMenuHighlight().Unfocused(" Option A "),
+        GetMenuHighlight().Focused(" Option B ")
     });
 
     EXPECT_FRAME_EQ(test_frame.to_string(), expected);

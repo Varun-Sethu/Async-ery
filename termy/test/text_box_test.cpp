@@ -1,5 +1,11 @@
+#include <cstddef>
+#include <optional>
+#include <string>
+
 #include <gtest/gtest.h>
 
+#include "color.h"
+#include "frame.h"
 #include "text_box.h"
 #include "key.h"
 #include "tui_test_helpers.h"
@@ -9,7 +15,6 @@ using Termy::Key;
 using Termy::ComponentAlignment;
 using Termy::Testing::TestFrame;
 using Termy::Testing::TextBorder;
-using Termy::Testing::TextPane;
 using Termy::ColouredString;
 
 static auto Cursor(const std::string& text) -> std::string {

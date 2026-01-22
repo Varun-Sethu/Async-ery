@@ -40,7 +40,7 @@ namespace Async {
         [[nodiscard]] auto create(std::function<T(void)> function) -> Task<T>;
 
         template <typename T>
-        [[nodiscard]] auto create_enumerable(typename AsyncEnumerable<T>::Generator generator) -> Async::AsyncEnumerable<T>;
+        [[nodiscard]] auto create_enumerable(typename AsyncEnumerable<T>::Generator generator) -> std::shared_ptr<Async::AsyncEnumerable<T>>;
 
         template <typename T>
         [[nodiscard]] auto when_any(std::vector<Task<T>> tasks) -> Task<T>;
@@ -82,8 +82,8 @@ auto inline Async::TaskFactory::value_source() -> TaskValueSource<T> {
 }
 
 template <typename T>
-auto inline Async::TaskFactory::create_enumerable(typename AsyncEnumerable<T>::Generator generator) -> Async::AsyncEnumerable<T> {
-    return Async::AsyncEnumerable<T>(*scheduler, std::move(generator));
+auto inline Async::TaskFactory::create_enumerable(typename AsyncEnumerable<T>::Generator generator) -> std::shared_ptr<Async::AsyncEnumerable<T>> {
+    return Async::AsyncEnumerable<T>::create(*scheduler, std::move(generator));
 }
 
 auto inline Async::TaskFactory::timer_source() -> TaskTimerSource {

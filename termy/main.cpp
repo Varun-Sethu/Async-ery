@@ -1,26 +1,34 @@
-#include <iostream>
 #include <atomic>
+// NOLINTNEXTLINE(misc-include-cleaner): chrono provides chrono_literals namespace for ms/s literals
+#include <chrono>
 #include <csignal>
+#include <iostream>
+#include <memory>
+#include <string>
 #include <thread>
+#include <vector>
 
 #include "async_lib/task_factory.h"
 
-#include "include/keyboard_poll_source.h"
+#include "include/color.h"
 #include "include/frame.h"
+#include "include/keyboard_poll_source.h"
 #include "include/menu.h"
 #include "include/text_box.h"
 #include "include/window.h"
 
 using namespace std::chrono_literals;
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables): Global atomic required for POSIX signal handler communication
 std::atomic<bool> running{true};
 
-void signal_handler(int) {
+void signal_handler(int /*signal*/) {
     running = false;
 }
 
+// NOLINTNEXTLINE(bugprone-exception-escape): Main function - uncaught exceptions are handled by C++ runtime
 auto main() -> int {
-    std::signal(SIGINT, signal_handler);
+    (void)std::signal(SIGINT, signal_handler);
 
     auto keyboard_poll_source = std::make_shared<Termy::KeyboardPollSource>();
     auto task_factory = Async::TaskFactory(1, { keyboard_poll_source });
@@ -63,15 +71,16 @@ auto main() -> int {
     );
 
     auto window = Termy::Window(80, 12, {
-        {.component = menu, .percentage = 0.25f, .alignment = Termy::ComponentAlignment::Center},
-        {.component = text_box, .percentage = 0.5f, .alignment = Termy::ComponentAlignment::Left},
-        {.component = menu_two, .percentage = 0.25f, .alignment = Termy::ComponentAlignment::Center}
+        {.component = menu, .percentage = 0.25F, .alignment = Termy::ComponentAlignment::Center},
+        {.component = text_box, .percentage = 0.5F, .alignment = Termy::ComponentAlignment::Left},
+        {.component = menu_two, .percentage = 0.25F, .alignment = Termy::ComponentAlignment::Center}
     }, *keyboard_poll_source);
 
     std::cout << "\033[2J";
     std::cout << "\033[?25l";
 
-    timer_source.periodic(33ms).for_each([&window](auto) {
+    // NOLINTNEXTLINE(misc-include-cleaner): ms literal comes from chrono_literals included via <chrono>
+    timer_source.periodic(33ms)->for_each([&window](auto) {
         std::cout << "\033[1;1H";
 
         window.clear();
@@ -81,6 +90,7 @@ auto main() -> int {
     });
 
     while (running) {
+        // NOLINTNEXTLINE(misc-include-cleaner): ms literal comes from chrono_literals included via <chrono>
         std::this_thread::sleep_for(100ms);
     }
 
