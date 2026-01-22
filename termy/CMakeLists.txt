@@ -28,6 +28,9 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(fmt)
 
+# Disable clang-tidy for external dependency
+set_target_properties(fmt PROPERTIES CXX_CLANG_TIDY "")
+
 FetchContent_Declare(
     googletest
     URL https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip
@@ -39,6 +42,12 @@ FetchContent_MakeAvailable(googletest)
 
 target_compile_options(gtest PRIVATE -Wno-error)
 target_compile_options(gtest_main PRIVATE -Wno-error)
+
+# Disable clang-tidy for external dependencies
+set_target_properties(gtest PROPERTIES CXX_CLANG_TIDY "")
+set_target_properties(gtest_main PROPERTIES CXX_CLANG_TIDY "")
+set_target_properties(gmock PROPERTIES CXX_CLANG_TIDY "")
+set_target_properties(gmock_main PROPERTIES CXX_CLANG_TIDY "")
 
 enable_testing()
 
