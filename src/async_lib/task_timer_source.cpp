@@ -19,8 +19,8 @@ auto Async::TaskTimerSource::after(std::chrono::milliseconds duration) -> Async:
     return value_source->create();
 }
 
-auto Async::TaskTimerSource::periodic(std::chrono::milliseconds period) -> Async::AsyncEnumerable<Unit> {
-    return Async::AsyncEnumerable<Unit>(scheduler, [this, period]() -> std::optional<Async::Task<Unit>> {
+auto Async::TaskTimerSource::periodic(std::chrono::milliseconds period) -> std::shared_ptr<Async::AsyncEnumerable<Unit>> {
+    return Async::AsyncEnumerable<Unit>::create(scheduler, [this, period]() -> std::optional<Async::Task<Unit>> {
         auto value_source = std::make_shared<Async::TaskValueSource<Unit>>(scheduler);
         timing_poll_source.get().schedule(period, [value_source](auto ctx) {
             value_source->complete(ctx, {});

@@ -1,10 +1,12 @@
 #pragma once
 
+#include <cstddef>
 #include <string>
 #include <vector>
 
 #include "color.h"
 #include "frame.h"
+#include "key.h"
 #include "window_component.h"
 
 namespace Termy {
@@ -23,7 +25,7 @@ struct MenuItem {
 
 class Menu : public IWindowComponent {
 public:
-    Menu(std::vector<MenuItem> items, MenuColors colors = {});
+    explicit Menu(std::vector<MenuItem> items, MenuColors colors = {});
 
     // Implementation details for the IWindowComponent interface.
     // These methods allow Menu to be used within a Window.
@@ -36,9 +38,8 @@ private:
 
     // width() returns the width of the menu, this is basically the
     // maxmimum menu item label length plus some padding.
-    auto width() const -> int;
+    [[nodiscard]] auto width() const -> int;
 
-private:
     std::vector<MenuItem> items_;
     MenuColors colors_;
     size_t focused_index_ = 0;

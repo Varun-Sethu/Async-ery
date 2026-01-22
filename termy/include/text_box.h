@@ -1,10 +1,13 @@
 #pragma once
 
+#include <cstddef>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "color.h"
 #include "frame.h"
+#include "key.h"
 #include "window_component.h"
 
 namespace Termy {
@@ -28,7 +31,7 @@ public:
     // These methods allow TextBox to be used within a Window.
     auto render(Frame frame) -> void override;
     auto on_special_key_press(Key key) -> void override;
-    auto on_char_key_press(char c) -> void override;
+    auto on_char_key_press(char character) -> void override;
 
 private:
     using WrappedLines = std::vector<std::pair<size_t, std::string>>;

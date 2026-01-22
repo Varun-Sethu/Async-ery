@@ -25,19 +25,19 @@ enum class Color {
     Default = 16
 };
 
-constexpr auto to_foreground_code(Color c) -> int {
-    if (c == Color::Default) {
+constexpr auto to_foreground_code(Color color) -> int {
+    if (color == Color::Default) {
         return 39;
     }
-    auto val = static_cast<int>(c);
+    auto val = static_cast<int>(color);
     return (val < 8) ? (30 + val) : (90 + val - 8);
 }
 
-constexpr auto to_background_code(Color c) -> int {
-    if (c == Color::Default) {
+constexpr auto to_background_code(Color color) -> int {
+    if (color == Color::Default) {
         return 49;
     }
-    auto val = static_cast<int>(c);
+    auto val = static_cast<int>(color);
     return (val < 8) ? (40 + val) : (100 + val - 8);
 }
 
@@ -47,17 +47,17 @@ public:
         : text_(std::move(text))
     {}
 
-    auto foreground(Color c) -> ColouredString& {
-        fg_ = c;
+    auto foreground(Color color) -> ColouredString& {
+        fg_ = color;
         return *this;
     }
 
-    auto background(Color c) -> ColouredString& {
-        bg_ = c;
+    auto background(Color color) -> ColouredString& {
+        bg_ = color;
         return *this;
     }
 
-    auto ansi() const -> std::string {
+    [[nodiscard]] auto ansi() const -> std::string {
         auto result = std::string();
         auto has_color = fg_.has_value() || bg_.has_value();
 

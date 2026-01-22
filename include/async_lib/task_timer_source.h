@@ -19,7 +19,7 @@ namespace Async {
 
         // create creates a new task that is resolved after the specified duration
         auto after(std::chrono::milliseconds duration) -> Async::Task<Unit>;
-        auto periodic(std::chrono::milliseconds period) -> Async::AsyncEnumerable<Unit>;
+        auto periodic(std::chrono::milliseconds period) -> std::shared_ptr<Async::AsyncEnumerable<Unit>>;
 
     private:
         // Note:

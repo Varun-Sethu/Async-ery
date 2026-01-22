@@ -12,9 +12,17 @@ class Frame;
 // they can discard any key press events.
 class IWindowComponent : public IKeyboardListener {
 public:
-    virtual ~IWindowComponent() = default;
+    ~IWindowComponent() override = default;
+
+    IWindowComponent(const IWindowComponent&) = delete;
+    auto operator=(const IWindowComponent&) -> IWindowComponent& = delete;
+    IWindowComponent(IWindowComponent&&) = delete;
+    auto operator=(IWindowComponent&&) -> IWindowComponent& = delete;
 
     virtual auto render(Frame frame) -> void = 0;
+
+protected:
+    IWindowComponent() = default;
 };
 
 }

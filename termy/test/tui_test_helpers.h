@@ -15,6 +15,7 @@
 #include "text_grid.h"
 #include "window.h"
 
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage): Macro needed to access EXPECT_TRUE and show proper test failure location
 #define EXPECT_FRAME_EQ(actual, expected) \
     { \
         auto actual_str = (actual); \
@@ -28,20 +29,21 @@
 
 namespace Termy::Testing {
 
+// NOLINTBEGIN(cert-dcl59-cpp): Anonymous namespace in header is acceptable for test helpers
 namespace {
-    auto codepoint_to_utf8(char32_t codepoint) -> std::string {
+    inline auto codepoint_to_utf8(char32_t codepoint) -> std::string {
         auto convert = std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t>();
         return convert.to_bytes(codepoint);
     }
 
-    auto visual_length(const std::string& text) -> size_t {
+    inline auto visual_length(const std::string& text) -> size_t {
         size_t length = 0;
         bool in_escape = false;
-        for (char c : text) {
-            if (c == '\x1B') {
+        for (const char character : text) {
+            if (character == '\x1B') {
                 in_escape = true;
             } else if (in_escape) {
-                if (c == 'm') {
+                if (character == 'm') {
                     in_escape = false;
                 }
             } else {
@@ -51,21 +53,22 @@ namespace {
         return length;
     }
 
-    auto produce_coloured_text_ansi(Color fg, Color bg, const std::string& text) -> std::string {
+    inline auto produce_coloured_text_ansi(Color foreground, Color background, const std::string& text) -> std::string {
         if (text.empty()) {
             return {};
         }
 
-        auto has_color = (fg != Color::Default) || (bg != Color::Default);
+        auto has_color = (foreground != Color::Default) || (background != Color::Default);
         if (has_color) {
             return fmt::format("\033[{};{}m{}\033[0m",
-                to_foreground_code(fg),
-                to_background_code(bg),
+                to_foreground_code(foreground),
+                to_background_code(background),
                 text);
         }
         return text;
     }
 }
+// NOLINTEND(cert-dcl59-cpp)
 
 class TextPane {
 public:
@@ -75,7 +78,7 @@ public:
         : lines_(std::move(lines))
     {}
 
-    operator std::string() const {
+    explicit operator std::string() const {
         auto result = std::string{};
         for (const auto& line : lines_) {
             result += line + "\n";
@@ -83,7 +86,7 @@ public:
         return result;
     }
 
-    auto lines() const -> const std::vector<std::string>& {
+    [[nodiscard]] auto lines() const -> const std::vector<std::string>& {
         return lines_;
     }
 
@@ -137,7 +140,7 @@ public:
         , cells_(std::move(cells))
     {}
 
-    auto to_string() const -> std::string {
+    [[nodiscard]] auto to_string() const -> std::string {
         auto result = std::string{};
 
         for (const auto& row : cells_) {
@@ -168,7 +171,7 @@ public:
         ComponentAlignment alignment = ComponentAlignment::Center
     ) -> Frame {
         auto span = TextGridSpan::from_grid(cells_, 0, width_);
-        return Frame(span, border_color, alignment);
+        return {span, border_color, alignment};
     }
 
     auto clear() -> void {
@@ -194,11 +197,11 @@ public:
         , unfocused_bg_(unfocused_bg)
     {}
 
-    auto Focused(const std::string& text) const -> std::string {
+    [[nodiscard]] auto Focused(const std::string& text) const -> std::string {
         return ColouredString(text).foreground(focused_fg_).background(focused_bg_).ansi();
     }
 
-    auto Unfocused(const std::string& text) const -> std::string {
+    [[nodiscard]] auto Unfocused(const std::string& text) const -> std::string {
         return ColouredString(text).foreground(unfocused_fg_).background(unfocused_bg_).ansi();
     }
 
@@ -211,11 +214,11 @@ private:
 
 class TextBorder {
 public:
-    TextBorder(Color color)
+    explicit TextBorder(Color color)
         : color_(color)
     {}
 
-    auto ColouredBorder(size_t width, std::initializer_list<std::string> content_lines) const -> TextPane {
+    [[nodiscard]] auto ColouredBorder(size_t width, std::initializer_list<std::string> content_lines) const -> TextPane {
         auto lines = std::vector<std::string>{};
         auto inner_width = (width >= 2) ? width - 2 : 0;
 
@@ -246,7 +249,7 @@ public:
     static auto PaddedContent(size_t width, size_t height, std::initializer_list<std::string> content_lines) -> TextPane {
         auto lines = std::vector<std::string>{};
 
-        lines.push_back(std::string(width, ' '));
+        lines.emplace_back(width, ' ');
 
         for (const auto& line : content_lines) {
             auto padded_line = " " + line + " ";
@@ -259,10 +262,10 @@ public:
 
         auto remaining_rows = height - content_lines.size() - 2;
         for (size_t i = 0; i < remaining_rows; ++i) {
-            lines.push_back(std::string(width, ' '));
+            lines.emplace_back(width, ' ');
         }
 
-        lines.push_back(std::string(width, ' '));
+        lines.emplace_back(width, ' ');
 
         return TextPane(std::move(lines));
     }
