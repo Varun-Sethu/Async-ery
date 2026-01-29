@@ -4,6 +4,7 @@ project(termy)
 
 add_executable(termy
     main.cpp
+    src/button.cpp
     src/frame.cpp
     src/menu.cpp
     src/text_box.cpp
@@ -53,9 +54,11 @@ enable_testing()
 
 add_executable(termy_tests
     test/test_main.cpp
+    test/button_test.cpp
     test/menu_test.cpp
     test/window_test.cpp
     test/text_box_test.cpp
+    src/button.cpp
     src/frame.cpp
     src/menu.cpp
     src/text_box.cpp

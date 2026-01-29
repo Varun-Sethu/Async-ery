@@ -36,6 +36,7 @@ namespace Async {
         [[nodiscard]] auto value_source() -> TaskValueSource<T>;
         [[nodiscard]] auto timer_source() -> TaskTimerSource;
         [[nodiscard]] auto io_source() -> TaskIOSource;
+        [[nodiscard]] auto timing_source() -> Timing::IPollSource&;
         template <typename T>
         [[nodiscard]] auto create(std::function<T(void)> function) -> Task<T>;
 
@@ -92,6 +93,10 @@ auto inline Async::TaskFactory::timer_source() -> TaskTimerSource {
 
 auto inline Async::TaskFactory::io_source() -> TaskIOSource {
     return { *scheduler, *io_poll_source };
+}
+
+auto inline Async::TaskFactory::timing_source() -> Timing::IPollSource& {
+    return *timing_poll_source;
 }
 
 
