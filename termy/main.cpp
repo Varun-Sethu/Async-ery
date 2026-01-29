@@ -10,6 +10,7 @@
 
 #include "async_lib/task_factory.h"
 
+#include "include/button.h"
 #include "include/color.h"
 #include "include/frame.h"
 #include "include/keyboard_poll_source.h"
@@ -70,10 +71,25 @@ auto main() -> int {
         text_box_colors
     );
 
+    auto button_colors = Termy::ButtonColors{
+        .normal_fg = Termy::Color::Black,
+        .normal_bg = Termy::Color::Cyan,
+        .pressed_fg = Termy::Color::White,
+        .pressed_bg = Termy::Color::Blue
+    };
+    auto press_count = 0;
+    auto button = Termy::Button(
+        "Click Me!",
+        [&press_count]() { ++press_count; },
+        task_factory.timing_source(),
+        button_colors
+    );
+
     auto window = Termy::Window(80, 12, {
-        {.component = menu, .percentage = 0.25F, .alignment = Termy::ComponentAlignment::Center},
-        {.component = text_box, .percentage = 0.5F, .alignment = Termy::ComponentAlignment::Left},
-        {.component = menu_two, .percentage = 0.25F, .alignment = Termy::ComponentAlignment::Center}
+        {.component = menu, .percentage = 0.2F, .alignment = Termy::ComponentAlignment::Center},
+        {.component = text_box, .percentage = 0.4F, .alignment = Termy::ComponentAlignment::Left},
+        {.component = button, .percentage = 0.2F, .alignment = Termy::ComponentAlignment::Center},
+        {.component = menu_two, .percentage = 0.2F, .alignment = Termy::ComponentAlignment::Center}
     }, *keyboard_poll_source);
 
     std::cout << "\033[2J";

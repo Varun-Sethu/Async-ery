@@ -41,9 +41,11 @@ add_library(${PROJECT_NAME}
     include/${PROJECT_NAME}/task_timer_source.h
     include/${PROJECT_NAME}/task_value_source.h
     include/${PROJECT_NAME}/task.h
+    include/${PROJECT_NAME}/timer.h
     include/${PROJECT_NAME}/types.h
     src/${PROJECT_NAME}/task_timer_source.cpp
     src/${PROJECT_NAME}/task_io_source.cpp
+    src/${PROJECT_NAME}/timer.cpp
 )
 
 target_link_libraries(${PROJECT_NAME} PUBLIC scheduler_intf cell io timing timing_structures concurrency)
